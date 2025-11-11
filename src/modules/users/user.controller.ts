@@ -9,7 +9,7 @@ import { asyncHandler } from '../../utils/async-handler.util';
 import { IUser } from './user.model';
 
 // Pure function: Transform user to response format
-const transformUser = (user: IUser) => ({
+export const transformUser = (user: IUser) => ({
   id: user._id.toString(),
   email: user.email,
   name: user.name,

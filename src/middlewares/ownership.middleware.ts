@@ -29,4 +29,3 @@ export const ownershipMiddleware = (resourceModel: 'product') => {
     next();
   };
 };
-

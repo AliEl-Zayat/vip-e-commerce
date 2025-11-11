@@ -100,7 +100,7 @@ export class OrderService {
     await cart.save();
 
     // Track purchase events for each product (async, don't block)
-    orderItems.forEach((item) => {
+    orderItems.forEach(item => {
       userBehaviorService
         .track(userId, {
           eventType: 'purchase',
@@ -111,7 +111,7 @@ export class OrderService {
             orderId: order._id.toString(),
           },
         })
-        .catch((err) => {
+        .catch(err => {
           console.error('[OrderService] Error tracking purchase:', err);
         });
     });
@@ -255,4 +255,3 @@ export class OrderService {
 }
 
 export const orderService = new OrderService();
-

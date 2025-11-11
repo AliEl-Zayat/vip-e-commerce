@@ -2,6 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { stockService } from './stock.service';
 import { UpdateStockDto, CreateStockAlertDto, UpdateStockAlertDto } from './dto/stock.dto';
 import { success } from '../../utils/response.util';
+import { IUser } from '../users/user.model';
+import { transformUser } from '../users/user.controller';
+import { IStockAlert, IStockHistory } from './stock.model';
+import { IProduct } from '../products/product.model';
+import { transformProduct } from '../products/product.controller';
 
 export class StockController {
   async updateStock(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -43,11 +48,15 @@ export class StockController {
       const page = req.query.page ? parseInt(String(req.query.page), 10) : undefined;
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
 
-      const { history, meta } = await stockService.getStockHistory(req.params.productId, page, limit);
+      const { history, meta } = await stockService.getStockHistory(
+        req.params.productId,
+        page,
+        limit
+      );
 
       success(
         res,
-        history.map((h) => ({
+        history.map((h: IStockHistory) => ({
           id: h._id.toString(),
           changeType: h.changeType,
           quantity: h.quantity,
@@ -55,7 +64,7 @@ export class StockController {
           newStock: h.newStock,
           reason: h.reason,
           orderId: h.orderId?.toString(),
-          userId: h.userId ? (h.userId as any).name : undefined,
+          userId: h.userId ? transformUser(h.userId as unknown as IUser)?.name : undefined,
           createdAt: h.createdAt,
         })),
         200,
@@ -113,21 +122,17 @@ export class StockController {
     try {
       const page = req.query.page ? parseInt(String(req.query.page), 10) : undefined;
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
-      const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+      const isActive =
+        req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
 
       const { alerts, meta } = await stockService.getStockAlerts(page, limit, isActive);
 
       success(
         res,
-        alerts.map((alert: any) => ({
+        alerts.map((alert: IStockAlert) => ({
           id: alert._id.toString(),
           product: alert.productId
-            ? {
-                id: alert.productId._id.toString(),
-                title: alert.productId.title,
-                slug: alert.productId.slug,
-                stock: alert.productId.stock,
-              }
+            ? transformProduct(alert.productId as unknown as IProduct)
             : null,
           threshold: alert.threshold,
           isActive: alert.isActive,
@@ -149,12 +154,7 @@ export class StockController {
 
       success(
         res,
-        products.map((product: any) => ({
-          id: product._id.toString(),
-          title: product.title,
-          slug: product.slug,
-          stock: product.stock,
-        }))
+        products.map((product: IProduct) => transformProduct(product))
       );
     } catch (err) {
       next(err);
@@ -172,4 +172,3 @@ export class StockController {
 }
 
 export const stockController = new StockController();
-

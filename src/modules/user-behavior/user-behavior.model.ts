@@ -99,4 +99,3 @@ userBehaviorSchema.index({ categoryId: 1, eventType: 1 });
 userBehaviorSchema.index({ createdAt: -1 }); // For trending queries
 
 export const UserBehavior = mongoose.model<IUserBehavior>('UserBehavior', userBehaviorSchema);
-

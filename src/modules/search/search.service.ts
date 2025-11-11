@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
-import { Product } from '../products/product.model';
+import { IProduct, Product } from '../products/product.model';
 import { Rating } from '../ratings/rating.model';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
+import { ICategory } from '../categories/category.model';
 
 export interface SearchFilters {
   q?: string;
@@ -75,7 +76,7 @@ export class SearchService {
       sort = { [field]: order === 'asc' ? 1 : -1 };
     } else if (filters.q) {
       // If text search, sort by relevance
-      sort = { score: { $meta: 'textScore' } as any };
+      sort = { score: { $meta: 'textScore' } as unknown as { $meta: string } };
     }
 
     // Execute query
@@ -99,7 +100,7 @@ export class SearchService {
     // Enhance products with rating data if minRating filter is applied
     let enhancedProducts = products;
     if (filters.minRating !== undefined) {
-      const productIds = products.map((p) => p._id);
+      const productIds = products.map(p => p._id);
       const ratings = await Rating.aggregate([
         { $match: { productId: { $in: productIds } } },
         {
@@ -111,9 +112,9 @@ export class SearchService {
         },
       ]);
 
-      const ratingMap = new Map(ratings.map((r) => [r._id.toString(), r.averageRating]));
+      const ratingMap = new Map(ratings.map(r => [r._id.toString(), r.averageRating]));
 
-      enhancedProducts = products.filter((p) => {
+      enhancedProducts = products.filter(p => {
         const avgRating = ratingMap.get(p._id.toString()) || 0;
         return avgRating >= filters.minRating!;
       });
@@ -145,10 +146,10 @@ export class SearchService {
 
     // Extract unique suggestions
     const suggestions = new Set<string>();
-    products.forEach((product) => {
+    products.forEach(product => {
       // Add title words that match
       const words = product.title.toLowerCase().split(/\s+/);
-      words.forEach((word) => {
+      words.forEach(word => {
         if (word.startsWith(searchTerm.toLowerCase()) && word.length > searchTerm.length) {
           suggestions.add(word);
         }
@@ -158,7 +159,9 @@ export class SearchService {
     return Array.from(suggestions).slice(0, limit);
   }
 
-  async getSearchSuggestions(query: string): Promise<{ products: any[]; categories: any[] }> {
+  async getSearchSuggestions(
+    query: string
+  ): Promise<{ products: IProduct[]; categories: ICategory[] }> {
     if (!query || query.trim().length < 2) {
       return { products: [], categories: [] };
     }
@@ -190,31 +193,46 @@ export class SearchService {
     ]);
 
     return {
-      products: products.map((p) => ({
-        id: p._id.toString(),
-        title: p.title,
-        slug: p.slug,
-        image: p.images[0]?.url,
-        price: p.price,
-      })),
-      categories: categories.map((c) => ({
-        id: c._id.toString(),
-        name: c.name,
-        slug: c.slug,
-      })),
+      products: products.map(
+        p =>
+          ({
+            _id: p._id,
+            title: p.title,
+            slug: p.slug,
+            description: p.description,
+            currency: p.currency,
+            images: p.images as unknown as Array<{ url: string; id: string }>,
+            stock: p.stock,
+            category: p.category,
+            categoryId: p.categoryId as unknown as mongoose.Types.ObjectId,
+            tags: p.tags,
+            sellerId: p.sellerId,
+            createdAt: p.createdAt as unknown as Date,
+            updatedAt: p.updatedAt as unknown as Date,
+          }) as unknown as IProduct
+      ),
+      categories: categories.map(
+        c =>
+          ({
+            _id: c._id,
+            name: c.name,
+            slug: c.slug,
+            isActive: c.isActive,
+            order: c.order,
+            createdAt: c.createdAt as unknown as Date,
+            updatedAt: c.updatedAt as unknown as Date,
+          }) as unknown as ICategory
+      ),
     };
   }
 
   async getPopularSearches(limit = 10): Promise<string[]> {
     // In a real implementation, you would track search queries
     // For now, return popular product titles
-    const products = await Product.find({}, { title: 1 })
-      .sort({ createdAt: -1 })
-      .limit(limit);
+    const products = await Product.find({}, { title: 1 }).sort({ createdAt: -1 }).limit(limit);
 
-    return products.map((p) => p.title).slice(0, limit);
+    return products.map(p => p.title).slice(0, limit);
   }
 }
 
 export const searchService = new SearchService();
-

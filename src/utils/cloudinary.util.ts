@@ -48,4 +48,3 @@ export const deleteFromCloudinary = async (publicId: string): Promise<void> => {
     });
   });
 };
-

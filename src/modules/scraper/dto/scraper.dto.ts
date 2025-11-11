@@ -15,4 +15,3 @@ export const updateScraperJobSchema = z.object({
 
 export type CreateScraperJobDto = z.infer<typeof createScraperJobSchema>;
 export type UpdateScraperJobDto = z.infer<typeof updateScraperJobSchema>;
-

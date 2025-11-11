@@ -129,4 +129,3 @@ router.get('/suggestions', searchController.getSuggestions.bind(searchController
 router.get('/popular', searchController.getPopularSearches.bind(searchController));
 
 export default router;
-

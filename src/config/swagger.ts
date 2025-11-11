@@ -7,7 +7,8 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'Ecommerce API',
       version: '1.0.0',
-      description: 'Production-ready ecommerce backend API with Express.js, TypeScript, MongoDB, and Cloudinary',
+      description:
+        'Production-ready ecommerce backend API with Express.js, TypeScript, MongoDB, and Cloudinary',
       contact: {
         name: 'API Support',
       },
@@ -439,7 +440,15 @@ const options: swaggerJsdoc.Options = {
           properties: {
             status: {
               type: 'string',
-              enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+              enum: [
+                'pending',
+                'confirmed',
+                'processing',
+                'shipped',
+                'delivered',
+                'cancelled',
+                'refunded',
+              ],
               example: 'shipped',
             },
           },
@@ -607,4 +616,3 @@ const options: swaggerJsdoc.Options = {
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
-

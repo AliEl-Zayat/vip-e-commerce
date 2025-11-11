@@ -29,4 +29,3 @@ export const trackBehaviorSchema = z.object({
 });
 
 export type TrackBehaviorDto = z.infer<typeof trackBehaviorSchema>;
-

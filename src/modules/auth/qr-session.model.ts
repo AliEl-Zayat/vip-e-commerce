@@ -58,5 +58,3 @@ qrSessionSchema.index({ qrToken: 1, status: 1 });
 qrSessionSchema.index({ sessionId: 1, status: 1 });
 
 export const QRSession = mongoose.model<IQRSession>('QRSession', qrSessionSchema);
-
-

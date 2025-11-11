@@ -98,4 +98,3 @@ router.get('/trending', recommendationController.getTrending);
 router.get('/for-you', authMiddleware, recommendationController.getForYou);
 
 export default router;
-

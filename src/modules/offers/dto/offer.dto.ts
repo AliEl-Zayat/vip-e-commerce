@@ -9,7 +9,14 @@ export const createOfferSchema = z
   .object({
     title: z.string().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
     description: z.string().optional(),
-    offerType: z.enum(['flash_sale', 'bogo', 'category_discount', 'product_discount', 'bundle', 'free_shipping']),
+    offerType: z.enum([
+      'flash_sale',
+      'bogo',
+      'category_discount',
+      'product_discount',
+      'bundle',
+      'free_shipping',
+    ]),
     discountType: z.enum(['percentage', 'fixed']),
     discountValue: z.number().positive('Discount value must be positive'),
     minPurchaseAmount: z.number().min(0).optional(),
@@ -31,7 +38,7 @@ export const createOfferSchema = z
     priority: z.number().int().default(0),
   })
   .refine(
-    (data) => {
+    data => {
       if (data.offerType === 'flash_sale') {
         return data.flashSaleStart && data.flashSaleEnd;
       }
@@ -43,7 +50,7 @@ export const createOfferSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       if (data.offerType === 'bogo') {
         return data.bogoBuyQuantity && data.bogoGetQuantity;
       }
@@ -55,7 +62,7 @@ export const createOfferSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       if (data.offerType === 'bundle') {
         return data.bundleProducts && data.bundleProducts.length >= 2 && data.bundlePrice;
       }
@@ -67,7 +74,7 @@ export const createOfferSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       if (data.offerType === 'category_discount') {
         return data.applicableCategories && data.applicableCategories.length > 0;
       }
@@ -79,7 +86,7 @@ export const createOfferSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       if (data.offerType === 'product_discount') {
         return data.applicableProducts && data.applicableProducts.length > 0;
       }
@@ -91,7 +98,7 @@ export const createOfferSchema = z
     }
   )
   .refine(
-    (data) => {
+    data => {
       if (data.offerType === 'free_shipping') {
         return data.freeShippingMinAmount !== undefined;
       }
@@ -134,5 +141,3 @@ export const applyOfferSchema = z.object({
 export type CreateOfferDto = z.infer<typeof createOfferSchema>;
 export type UpdateOfferDto = z.infer<typeof updateOfferSchema>;
 export type ApplyOfferDto = z.infer<typeof applyOfferSchema>;
-
-

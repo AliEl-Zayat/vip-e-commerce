@@ -1,12 +1,15 @@
 # Migration Pattern: Class-Based OOP to Functional Programming
 
 ## Overview
+
 This document outlines the migration pattern used to convert the codebase from class-based OOP to functional programming while maintaining DRY, KISS, SoC, TypeScript, SOLID, and TDD principles.
 
 ## Key Changes
 
 ### 1. Service Layer
+
 **Before (Class-based):**
+
 ```typescript
 export class ServiceName {
   async methodName(data: Dto): Promise<ReturnType> {
@@ -17,6 +20,7 @@ export const serviceName = new ServiceName();
 ```
 
 **After (Functional):**
+
 ```typescript
 export const methodName = async (data: Dto): Promise<ReturnType> => {
   // implementation
@@ -24,7 +28,9 @@ export const methodName = async (data: Dto): Promise<ReturnType> => {
 ```
 
 ### 2. Controller Layer
+
 **Before (Class-based):**
+
 ```typescript
 export class ControllerName {
   async handler(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -39,6 +45,7 @@ export const controllerName = new ControllerName();
 ```
 
 **After (Functional):**
+
 ```typescript
 import { asyncHandler } from '../../utils/async-handler.util';
 
@@ -48,25 +55,30 @@ export const handler = asyncHandler(async (req: Request, res: Response): Promise
 ```
 
 ### 3. Routes
+
 **Before:**
+
 ```typescript
 import { controllerName } from './controller';
 router.get('/path', controllerName.handler.bind(controllerName));
 ```
 
 **After:**
+
 ```typescript
 import * as controllerName from './controller';
 router.get('/path', controllerName.handler);
 ```
 
 ### 4. Pure Functions
+
 - Extract reusable logic into pure functions
 - Use function composition where appropriate
 - Avoid side effects in pure functions
 - Use higher-order functions (like `asyncHandler`)
 
 ### 5. Helper Functions
+
 - Create utility functions for common transformations
 - Use `asyncHandler` to eliminate try-catch boilerplate (DRY)
 - Extract pure functions for data transformations
@@ -94,4 +106,3 @@ router.get('/path', controllerName.handler);
 - [ ] Convert remaining modules
 - [ ] Update all route files
 - [ ] Verify all functionality
-

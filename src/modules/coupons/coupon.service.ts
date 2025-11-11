@@ -132,7 +132,11 @@ export class CouponService {
   async validateCoupon(
     code: string,
     userId: string,
-    cartItems: Array<{ productId: string; quantity: number; price: number }>,
+    cartItems: Array<{
+      productId: string;
+      quantity: number;
+      price: number;
+    }>,
     totalAmount: number
   ): Promise<CouponValidationResult> {
     const coupon = await Coupon.findOne({ code: code.toUpperCase() });
@@ -184,7 +188,7 @@ export class CouponService {
     // Check per-user usage limit
     if (coupon.usageLimitPerUser) {
       const userUsageCount = coupon.usageHistory.filter(
-        (usage) => usage.userId.toString() === userId
+        usage => usage.userId.toString() === userId
       ).length;
       if (userUsageCount >= coupon.usageLimitPerUser) {
         return {
@@ -207,9 +211,9 @@ export class CouponService {
     // Check applicability
     if (coupon.applicableTo === 'category') {
       const applicableCategories = coupon.applicableCategories || [];
-      const productIds = cartItems.map((item) => item.productId);
+      const productIds = cartItems.map(item => item.productId);
       const products = await Product.find({ _id: { $in: productIds } });
-      const hasApplicableProduct = products.some((product) =>
+      const hasApplicableProduct = products.some(product =>
         applicableCategories.includes(product.category)
       );
 
@@ -221,8 +225,8 @@ export class CouponService {
         };
       }
     } else if (coupon.applicableTo === 'product') {
-      const applicableProductIds = (coupon.applicableProducts || []).map((id) => id.toString());
-      const hasApplicableProduct = cartItems.some((item) =>
+      const applicableProductIds = (coupon.applicableProducts || []).map(id => id.toString());
+      const hasApplicableProduct = cartItems.some(item =>
         applicableProductIds.includes(item.productId)
       );
 
@@ -256,11 +260,7 @@ export class CouponService {
     };
   }
 
-  async applyCouponToOrder(
-    couponId: string,
-    userId: string,
-    orderId: string
-  ): Promise<ICoupon> {
+  async applyCouponToOrder(couponId: string, userId: string, orderId: string): Promise<ICoupon> {
     const coupon = await Coupon.findById(couponId);
     if (!coupon) {
       throw AppError.notFound('Coupon not found');
@@ -279,4 +279,3 @@ export class CouponService {
 }
 
 export const couponService = new CouponService();
-

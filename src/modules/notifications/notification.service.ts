@@ -5,6 +5,8 @@ import { AppError } from '../../utils/error.util';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
 import { sendEmail } from '../../utils/email.util';
 import { pushNotificationService } from '../push-notifications/push-notification.service';
+import { User, IUser } from '../users/user.model';
+import { NotificationDto, mapNotificationToDto } from './notification.types';
 
 export class NotificationService {
   async create(data: CreateNotificationDto): Promise<INotification> {
@@ -25,7 +27,7 @@ export class NotificationService {
   }
 
   async sendNotification(notification: INotification): Promise<void> {
-    const user = await mongoose.model('User').findById(notification.userId);
+    const user = (await User.findById(notification.userId)) as IUser | null;
     if (!user) {
       return;
     }
@@ -34,7 +36,7 @@ export class NotificationService {
     if (notification.channels.includes('email')) {
       try {
         await sendEmail({
-          to: (user as any).email,
+          to: user.email,
           subject: notification.title,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -69,7 +71,7 @@ export class NotificationService {
     limit?: number,
     read?: boolean,
     type?: NotificationType
-  ) {
+  ): Promise<{ notifications: NotificationDto[]; meta: ReturnType<typeof buildPaginationMeta> }> {
     const { skip, limit: queryLimit } = parsePagination({ page, limit });
 
     const filter: Record<string, unknown> = { userId: new mongoose.Types.ObjectId(userId) };
@@ -87,7 +89,9 @@ export class NotificationService {
 
     const meta = buildPaginationMeta(page || 1, queryLimit, totalItems);
 
-    return { notifications, meta };
+    const notificationDtos = notifications.map(mapNotificationToDto);
+
+    return { notifications: notificationDtos, meta };
   }
 
   async getUnreadCount(userId: string): Promise<number> {
@@ -130,7 +134,11 @@ export class NotificationService {
     return { count: result.modifiedCount };
   }
 
-  async update(notificationId: string, userId: string, data: UpdateNotificationDto): Promise<INotification> {
+  async update(
+    notificationId: string,
+    userId: string,
+    data: UpdateNotificationDto
+  ): Promise<INotification> {
     const notification = await Notification.findOne({
       _id: notificationId,
       userId: new mongoose.Types.ObjectId(userId),
@@ -186,7 +194,12 @@ export class NotificationService {
     });
   }
 
-  async notifyOrderShipped(userId: string, orderId: string, orderNumber: string, trackingNumber?: string): Promise<void> {
+  async notifyOrderShipped(
+    userId: string,
+    orderId: string,
+    orderNumber: string,
+    trackingNumber?: string
+  ): Promise<void> {
     await this.create({
       userId,
       type: 'order_shipped',
@@ -197,7 +210,12 @@ export class NotificationService {
     });
   }
 
-  async notifyLowStock(userId: string, productId: string, productTitle: string, stock: number): Promise<void> {
+  async notifyLowStock(
+    userId: string,
+    productId: string,
+    productTitle: string,
+    stock: number
+  ): Promise<void> {
     await this.create({
       userId,
       type: 'low_stock',
@@ -208,7 +226,13 @@ export class NotificationService {
     });
   }
 
-  async notifyPriceDrop(userId: string, productId: string, productTitle: string, oldPrice: number, newPrice: number): Promise<void> {
+  async notifyPriceDrop(
+    userId: string,
+    productId: string,
+    productTitle: string,
+    oldPrice: number,
+    newPrice: number
+  ): Promise<void> {
     await this.create({
       userId,
       type: 'price_drop',
@@ -221,4 +245,3 @@ export class NotificationService {
 }
 
 export const notificationService = new NotificationService();
-

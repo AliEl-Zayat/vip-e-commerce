@@ -99,14 +99,15 @@ export class CouponController {
       const query = {
         page: req.query.page ? parseInt(String(req.query.page), 10) : undefined,
         limit: req.query.limit ? parseInt(String(req.query.limit), 10) : undefined,
-        isActive: req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
+        isActive:
+          req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined,
       };
 
       const { coupons, meta } = await couponService.listCoupons(query);
 
       success(
         res,
-        coupons.map((coupon) => ({
+        coupons.map(coupon => ({
           id: coupon._id.toString(),
           code: coupon.code,
           description: coupon.description,
@@ -221,5 +222,3 @@ export class CouponController {
 }
 
 export const couponController = new CouponController();
-
-

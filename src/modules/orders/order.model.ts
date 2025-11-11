@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { MongooseTransformReturn } from '../../types/mongoose.types';
 
 export type OrderStatus =
   | 'pending'
@@ -200,8 +201,17 @@ const orderSchema = new Schema<IOrder>(
     status: {
       type: String,
       enum: {
-        values: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
-        message: 'Status must be one of: pending, confirmed, processing, shipped, delivered, cancelled, refunded',
+        values: [
+          'pending',
+          'confirmed',
+          'processing',
+          'shipped',
+          'delivered',
+          'cancelled',
+          'refunded',
+        ],
+        message:
+          'Status must be one of: pending, confirmed, processing, shipped, delivered, cancelled, refunded',
       },
       default: 'pending',
       // Index defined at schema level: orderSchema.index({ status: 1, createdAt: -1 })
@@ -234,16 +244,16 @@ const orderSchema = new Schema<IOrder>(
     timestamps: true,
     strict: true,
     toJSON: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
       },
     },
     toObject: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
@@ -264,23 +274,22 @@ orderSchema.pre('save', async function (next) {
   if (this.isNew && !this.orderNumber) {
     let orderNumber: string;
     let isUnique = false;
-    
+
     // Ensure uniqueness
     while (!isUnique) {
       const timestamp = Date.now().toString(36).toUpperCase();
       const random = Math.random().toString(36).substring(2, 8).toUpperCase();
       orderNumber = `ORD-${timestamp}-${random}`;
-      
+
       const existingOrder = await mongoose.model('Order').findOne({ orderNumber });
       if (!existingOrder) {
         isUnique = true;
       }
     }
-    
+
     this.orderNumber = orderNumber!;
   }
   next();
 });
 
 export const Order = mongoose.model<IOrder>('Order', orderSchema);
-

@@ -37,7 +37,12 @@ const router: Router = Router();
  *       201:
  *         description: Rating created successfully
  */
-router.post('/', authMiddleware, validate(createRatingSchema), ratingController.create.bind(ratingController));
+router.post(
+  '/',
+  authMiddleware,
+  validate(createRatingSchema),
+  ratingController.create.bind(ratingController)
+);
 
 /**
  * @swagger
@@ -67,7 +72,12 @@ router.post('/', authMiddleware, validate(createRatingSchema), ratingController.
  *       200:
  *         description: Rating updated successfully
  */
-router.patch('/:id', authMiddleware, validate(updateRatingSchema), ratingController.update.bind(ratingController));
+router.patch(
+  '/:id',
+  authMiddleware,
+  validate(updateRatingSchema),
+  ratingController.update.bind(ratingController)
+);
 
 /**
  * @swagger
@@ -137,7 +147,10 @@ router.get('/products/:productId', ratingController.getProductRatings.bind(ratin
  *       200:
  *         description: Rating statistics retrieved successfully
  */
-router.get('/products/:productId/stats', ratingController.getProductRatingStats.bind(ratingController));
+router.get(
+  '/products/:productId/stats',
+  ratingController.getProductRatingStats.bind(ratingController)
+);
 
 /**
  * @swagger
@@ -157,7 +170,11 @@ router.get('/products/:productId/stats', ratingController.getProductRatingStats.
  *       200:
  *         description: User rating retrieved successfully
  */
-router.get('/products/:productId/my-rating', authMiddleware, ratingController.getUserRating.bind(ratingController));
+router.get(
+  '/products/:productId/my-rating',
+  authMiddleware,
+  ratingController.getUserRating.bind(ratingController)
+);
 
 /**
  * @swagger
@@ -179,4 +196,3 @@ router.get('/products/:productId/my-rating', authMiddleware, ratingController.ge
 router.post('/:id/helpful', ratingController.markHelpful.bind(ratingController));
 
 export default router;
-

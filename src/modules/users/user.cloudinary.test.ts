@@ -80,4 +80,3 @@ describe('User Avatar Upload', () => {
     expect(response.body.success).toBe(false);
   });
 });
-

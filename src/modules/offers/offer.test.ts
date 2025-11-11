@@ -289,10 +289,14 @@ describe('Offer Module', () => {
     });
 
     it('should filter by offer type', async () => {
-      const response = await request(app).get('/api/v1/offers?offerType=product_discount').expect(200);
+      const response = await request(app)
+        .get('/api/v1/offers?offerType=product_discount')
+        .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.every((o: { offerType: string }) => o.offerType === 'product_discount')).toBe(true);
+      expect(
+        response.body.data.every((o: { offerType: string }) => o.offerType === 'product_discount')
+      ).toBe(true);
     });
 
     it('should filter by category', async () => {
@@ -555,5 +559,3 @@ describe('Offer Module', () => {
     });
   });
 });
-
-

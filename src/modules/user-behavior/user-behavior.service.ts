@@ -86,7 +86,13 @@ export class UserBehaviorService {
         { $project: { category: '$_id', count: 1, _id: 0 } },
       ]),
       UserBehavior.aggregate([
-        { $match: { userId: userIdObj, eventType: 'search_query', 'eventData.query': { $exists: true } } },
+        {
+          $match: {
+            userId: userIdObj,
+            eventType: 'search_query',
+            'eventData.query': { $exists: true },
+          },
+        },
         { $group: { _id: '$eventData.query', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 10 },
@@ -142,7 +148,7 @@ export class UserBehaviorService {
     };
   }
 
-  async getProductViews(productId: string, limit = 100): Promise<number> {
+  async getProductViews(productId: string): Promise<number> {
     return UserBehavior.countDocuments({
       productId: new mongoose.Types.ObjectId(productId),
       eventType: 'product_view',
@@ -158,7 +164,7 @@ export class UserBehaviorService {
       .limit(limit)
       .distinct('userId');
 
-    return behaviors.map((id) => id.toString());
+    return behaviors.map(id => id.toString());
   }
 
   async getSimilarUsers(userId: string, limit = 50): Promise<string[]> {
@@ -204,7 +210,7 @@ export class UserBehaviorService {
       { $limit: limit },
     ]);
 
-    return similarUsers.map((u) => u.userId.toString());
+    return similarUsers.map(u => u.userId.toString());
   }
 
   async getUserProductInteractions(userId: string): Promise<Map<string, number>> {
@@ -213,7 +219,9 @@ export class UserBehaviorService {
         $match: {
           userId: new mongoose.Types.ObjectId(userId),
           productId: { $exists: true },
-          eventType: { $in: ['product_view', 'purchase', 'add_to_cart', 'favorite_add', 'wishlist_add'] },
+          eventType: {
+            $in: ['product_view', 'purchase', 'add_to_cart', 'favorite_add', 'wishlist_add'],
+          },
         },
       },
       {
@@ -238,7 +246,7 @@ export class UserBehaviorService {
     ]);
 
     const interactionMap = new Map<string, number>();
-    interactions.forEach((interaction) => {
+    interactions.forEach(interaction => {
       interactionMap.set(interaction._id.toString(), interaction.score);
     });
 
@@ -247,4 +255,3 @@ export class UserBehaviorService {
 }
 
 export const userBehaviorService = new UserBehaviorService();
-

@@ -156,4 +156,3 @@ router.patch('/profile', validate(updateProfileSchema), userController.updatePro
 router.post('/profile/avatar', uploadSingle, userController.uploadAvatar);
 
 export default router;
-

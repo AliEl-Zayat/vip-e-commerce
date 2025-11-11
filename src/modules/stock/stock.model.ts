@@ -1,6 +1,14 @@
+import { MongooseTransformReturn } from '@/types/mongoose.types';
 import mongoose, { Schema } from 'mongoose';
 
-export type StockChangeType = 'purchase' | 'sale' | 'adjustment' | 'return' | 'restock' | 'damaged' | 'expired';
+export type StockChangeType =
+  | 'purchase'
+  | 'sale'
+  | 'adjustment'
+  | 'return'
+  | 'restock'
+  | 'damaged'
+  | 'expired';
 
 export interface IStockHistory extends mongoose.Document {
   _id: mongoose.Types.ObjectId;
@@ -37,7 +45,8 @@ const stockHistorySchema = new Schema<IStockHistory>(
       type: String,
       enum: {
         values: ['purchase', 'sale', 'adjustment', 'return', 'restock', 'damaged', 'expired'],
-        message: 'Change type must be one of: purchase, sale, adjustment, return, restock, damaged, expired',
+        message:
+          'Change type must be one of: purchase, sale, adjustment, return, restock, damaged, expired',
       },
       required: [true, 'Change type is required'],
     },
@@ -74,16 +83,16 @@ const stockHistorySchema = new Schema<IStockHistory>(
     timestamps: true,
     strict: true,
     toJSON: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
       },
     },
     toObject: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
@@ -122,16 +131,16 @@ const stockAlertSchema = new Schema<IStockAlert>(
     timestamps: true,
     strict: true,
     toJSON: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
       },
     },
     toObject: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
@@ -145,4 +154,3 @@ stockAlertSchema.index({ productId: 1 }, { unique: true });
 
 export const StockHistory = mongoose.model<IStockHistory>('StockHistory', stockHistorySchema);
 export const StockAlert = mongoose.model<IStockAlert>('StockAlert', stockAlertSchema);
-

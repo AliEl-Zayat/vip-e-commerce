@@ -32,4 +32,3 @@ export const upload = multer({
 
 export const uploadSingle: RequestHandler = upload.single('image');
 export const uploadMultiple: RequestHandler = upload.array('images', 10);
-

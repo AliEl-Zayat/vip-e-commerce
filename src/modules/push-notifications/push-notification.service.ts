@@ -82,8 +82,8 @@ export class PushNotificationService {
     }
 
     // Send to all user's devices
-    const promises = tokens.map((token) =>
-      this.sendPushNotification(token.token, token.platform, payload).catch((error) => {
+    const promises = tokens.map(token =>
+      this.sendPushNotification(token.token, token.platform, payload).catch(error => {
         console.error(`Failed to send push to token ${token.token}:`, error);
         // Mark token as inactive if sending fails
         if (error.code === 'messaging/registration-token-not-registered') {
@@ -109,8 +109,8 @@ export class PushNotificationService {
 
   async sendToAll(payload: PushNotificationPayload): Promise<void> {
     const tokens = await PushToken.find({ isActive: true });
-    const promises = tokens.map((token) =>
-      this.sendPushNotification(token.token, token.platform, payload).catch((error) => {
+    const promises = tokens.map(token =>
+      this.sendPushNotification(token.token, token.platform, payload).catch(error => {
         console.error(`Failed to send push to token ${token.token}:`, error);
       })
     );
@@ -131,4 +131,3 @@ export class PushNotificationService {
 }
 
 export const pushNotificationService = new PushNotificationService();
-

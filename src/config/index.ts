@@ -34,12 +34,10 @@ const getConfig = (): Config => {
     'CLOUDINARY_API_SECRET',
   ];
 
-  const missing = requiredEnvVars.filter((key) => !process.env[key]);
+  const missing = requiredEnvVars.filter(key => !process.env[key]);
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}`
-    );
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
 
   return {
@@ -66,4 +64,3 @@ const getConfig = (): Config => {
 };
 
 export const config = getConfig();
-

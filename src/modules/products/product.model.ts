@@ -122,7 +122,10 @@ productSchema.index({ categoryId: 1, stock: 1 });
 productSchema.index({ price: 1, stock: 1 });
 productSchema.index({ tags: 1 });
 // Text search index
-productSchema.index({ title: 'text', description: 'text' }, { weights: { title: 10, description: 5 } });
+productSchema.index(
+  { title: 'text', description: 'text' },
+  { weights: { title: 10, description: 5 } }
+);
 
 // Generate slug from title before saving
 productSchema.pre('save', function (next) {
@@ -138,7 +141,9 @@ productSchema.pre('save', function (next) {
 // Validation: Ensure slug is unique
 productSchema.pre('save', async function (next) {
   if (this.isModified('slug')) {
-    const existingProduct = await mongoose.model('Product').findOne({ slug: this.slug, _id: { $ne: this._id } });
+    const existingProduct = await mongoose
+      .model('Product')
+      .findOne({ slug: this.slug, _id: { $ne: this._id } });
     if (existingProduct) {
       return next(new Error('Product with this slug already exists'));
     }
@@ -147,4 +152,3 @@ productSchema.pre('save', async function (next) {
 });
 
 export const Product = mongoose.model<IProduct>('Product', productSchema);
-

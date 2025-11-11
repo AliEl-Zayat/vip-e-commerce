@@ -30,4 +30,3 @@ export type MongooseTransformFn = (
   _doc: MongooseTransformDoc,
   ret: MongooseTransformReturn
 ) => MongooseTransformReturn;
-

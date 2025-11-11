@@ -32,4 +32,3 @@ favoriteSchema.index({ userId: 1, productId: 1 }, { unique: true });
 favoriteSchema.index({ userId: 1, createdAt: -1 });
 
 export const Favorite = mongoose.model<IFavorite>('Favorite', favoriteSchema);
-

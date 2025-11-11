@@ -1,11 +1,13 @@
 import mongoose from 'mongoose';
 import { Product, IProduct } from '../products/product.model';
-import { RecommendationCache, IRecommendationCache, RecommendationType } from './recommendation.model';
+import {
+  RecommendationCache,
+  IRecommendationCache,
+  RecommendationType,
+} from './recommendation.model';
 import { UserBehavior } from '../user-behavior/user-behavior.model';
 import { userBehaviorService } from '../user-behavior/user-behavior.service';
 import { Order } from '../orders/order.model';
-import { Favorite } from '../favorites/favorite.model';
-import { Wishlist } from '../wishlist/wishlist.model';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
 import { AppError } from '../../utils/error.util';
 
@@ -21,7 +23,6 @@ export interface RecommendationResult {
 
 export class RecommendationService {
   private readonly CACHE_TTL_HOURS = 1;
-  private readonly DEFAULT_LIMIT = 20;
   private readonly COLLABORATIVE_WEIGHT = 0.4;
   private readonly CONTENT_BASED_WEIGHT = 0.6;
 
@@ -35,7 +36,6 @@ export class RecommendationService {
     limit?: number
   ): Promise<RecommendationResult> {
     const { limit: queryLimit } = parsePagination({ page, limit });
-    const cacheKey = `personalized:${userId}`;
 
     // Check cache
     const cached = await this.getCachedRecommendations(userId, 'personalized');
@@ -59,7 +59,7 @@ export class RecommendationService {
 
     // Return paginated results
     const paginatedProducts = recommendations.slice(0, queryLimit);
-    const products = await Product.find({ _id: { $in: paginatedProducts.map((r) => r.productId) } })
+    const products = await Product.find({ _id: { $in: paginatedProducts.map(r => r.productId) } })
       .populate('sellerId', 'name email')
       .populate('categoryId', 'name slug');
 
@@ -107,7 +107,7 @@ export class RecommendationService {
 
     // Return paginated results
     const paginatedProducts = similarProducts.slice(0, queryLimit);
-    const products = await Product.find({ _id: { $in: paginatedProducts.map((r) => r.productId) } })
+    const products = await Product.find({ _id: { $in: paginatedProducts.map(r => r.productId) } })
       .populate('sellerId', 'name email')
       .populate('categoryId', 'name slug');
 
@@ -145,7 +145,7 @@ export class RecommendationService {
 
     // Return paginated results
     const paginatedProducts = trendingProducts.slice(0, queryLimit);
-    const products = await Product.find({ _id: { $in: paginatedProducts.map((r) => r.productId) } })
+    const products = await Product.find({ _id: { $in: paginatedProducts.map(r => r.productId) } })
       .populate('sellerId', 'name email')
       .populate('categoryId', 'name slug');
 
@@ -158,14 +158,18 @@ export class RecommendationService {
   /**
    * Get "For You" recommendations (similar to personalized but more curated)
    */
-  async getRecommendedForYou(userId: string, page?: number, limit?: number): Promise<RecommendationResult> {
+  async getRecommendedForYou(
+    userId: string,
+    page?: number,
+    limit?: number
+  ): Promise<RecommendationResult> {
     // Similar to personalized but with additional filtering
     const personalized = await this.getPersonalizedRecommendations(userId, page, limit);
 
     // Filter out products user already purchased
     const purchasedProductIds = await this.getUserPurchasedProducts(userId);
     const filteredProducts = personalized.products.filter(
-      (p) => !purchasedProductIds.includes(p._id.toString())
+      p => !purchasedProductIds.includes(p._id.toString())
     );
 
     return {
@@ -189,14 +193,14 @@ export class RecommendationService {
     const combinedMap = new Map<string, number>();
 
     // Add collaborative recommendations (40% weight)
-    collaborativeRecs.forEach((rec) => {
+    collaborativeRecs.forEach(rec => {
       const key = rec.productId.toString();
       const existingScore = combinedMap.get(key) || 0;
       combinedMap.set(key, existingScore + rec.score * this.COLLABORATIVE_WEIGHT);
     });
 
     // Add content-based recommendations (60% weight)
-    contentBasedRecs.forEach((rec) => {
+    contentBasedRecs.forEach(rec => {
       const key = rec.productId.toString();
       const existingScore = combinedMap.get(key) || 0;
       combinedMap.set(key, existingScore + rec.score * this.CONTENT_BASED_WEIGHT);
@@ -231,7 +235,7 @@ export class RecommendationService {
     const similarUserProducts = await UserBehavior.aggregate([
       {
         $match: {
-          userId: { $in: similarUserIds.map((id) => new mongoose.Types.ObjectId(id)) },
+          userId: { $in: similarUserIds.map(id => new mongoose.Types.ObjectId(id)) },
           productId: { $exists: true },
           eventType: { $in: ['product_view', 'purchase', 'add_to_cart', 'favorite_add'] },
         },
@@ -261,10 +265,10 @@ export class RecommendationService {
     // Exclude products user already interacted with
     const userInteractions = await userBehaviorService.getUserProductInteractions(userId);
     const filteredProducts = similarUserProducts.filter(
-      (p) => !userInteractions.has(p.productId.toString())
+      p => !userInteractions.has(p.productId.toString())
     );
 
-    return filteredProducts.map((p) => ({
+    return filteredProducts.map(p => ({
       productId: p.productId,
       score: p.score,
     }));
@@ -277,7 +281,6 @@ export class RecommendationService {
     userId: string
   ): Promise<Array<{ productId: mongoose.Types.ObjectId; score: number }>> {
     // Get user's preferred categories, tags, and price range
-    const stats = await userBehaviorService.getUserStats(userId);
     const userInteractions = await userBehaviorService.getUserProductInteractions(userId);
 
     // Get products user has interacted with
@@ -287,7 +290,7 @@ export class RecommendationService {
     }
 
     const userProducts = await Product.find({
-      _id: { $in: userProductIds.map((id) => new mongoose.Types.ObjectId(id)) },
+      _id: { $in: userProductIds.map(id => new mongoose.Types.ObjectId(id)) },
     });
 
     if (userProducts.length === 0) {
@@ -300,16 +303,16 @@ export class RecommendationService {
     let minPrice = Infinity;
     let maxPrice = 0;
 
-    userProducts.forEach((product) => {
+    userProducts.forEach(product => {
       if (product.category) preferredCategories.add(product.category);
-      product.tags.forEach((tag) => preferredTags.add(tag));
+      product.tags.forEach(tag => preferredTags.add(tag));
       if (product.price < minPrice) minPrice = product.price;
       if (product.price > maxPrice) maxPrice = product.price;
     });
 
     // Find similar products
     const query: Record<string, unknown> = {
-      _id: { $nin: userProductIds.map((id) => new mongoose.Types.ObjectId(id)) },
+      _id: { $nin: userProductIds.map(id => new mongoose.Types.ObjectId(id)) },
       stock: { $gt: 0 }, // Only in-stock products
     };
 
@@ -329,12 +332,10 @@ export class RecommendationService {
       };
     }
 
-    const similarProducts = await Product.find(query)
-      .select('_id category tags price')
-      .limit(100);
+    const similarProducts = await Product.find(query).select('_id category tags price').limit(100);
 
     // Score products based on similarity
-    const scoredProducts = similarProducts.map((product) => {
+    const scoredProducts = similarProducts.map(product => {
       let score = 0;
 
       // Category match
@@ -343,7 +344,7 @@ export class RecommendationService {
       }
 
       // Tag matches
-      const matchingTags = product.tags.filter((tag) => preferredTags.has(tag)).length;
+      const matchingTags = product.tags.filter(tag => preferredTags.has(tag)).length;
       score += matchingTags * 2;
 
       // Price similarity
@@ -406,16 +407,19 @@ export class RecommendationService {
       .limit(100);
 
     // Score products based on similarity
-    const scoredProducts = similarProducts.map((p) => {
+    const scoredProducts = similarProducts.map(p => {
       let score = 0;
 
       // Category match
-      if (p.category === product.category || p.categoryId?.toString() === product.categoryId?.toString()) {
+      if (
+        p.category === product.category ||
+        p.categoryId?.toString() === product.categoryId?.toString()
+      ) {
         score += 5;
       }
 
       // Tag matches
-      const matchingTags = p.tags.filter((tag) => product.tags.includes(tag)).length;
+      const matchingTags = p.tags.filter(tag => product.tags.includes(tag)).length;
       score += matchingTags * 3;
 
       // Price similarity
@@ -435,7 +439,9 @@ export class RecommendationService {
   /**
    * Find trending products (most viewed/purchased in last 7 days)
    */
-  private async findTrendingProducts(): Promise<Array<{ productId: mongoose.Types.ObjectId; score: number }>> {
+  private async findTrendingProducts(): Promise<
+    Array<{ productId: mongoose.Types.ObjectId; score: number }>
+  > {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -477,7 +483,7 @@ export class RecommendationService {
       { $limit: 50 },
     ]);
 
-    return trending.map((t) => ({
+    return trending.map(t => ({
       productId: t.productId,
       score: t.score,
     }));
@@ -493,8 +499,8 @@ export class RecommendationService {
     }).select('items.productId');
 
     const productIds = new Set<string>();
-    orders.forEach((order) => {
-      order.items.forEach((item) => {
+    orders.forEach(order => {
+      order.items.forEach(item => {
         productIds.add(item.productId.toString());
       });
     });
@@ -515,7 +521,7 @@ export class RecommendationService {
     expiresAt.setHours(expiresAt.getHours() + this.CACHE_TTL_HOURS);
 
     const scoresMap = new Map<string, number>();
-    recommendations.forEach((rec) => {
+    recommendations.forEach(rec => {
       scoresMap.set(rec.productId.toString(), rec.score);
     });
 
@@ -523,7 +529,7 @@ export class RecommendationService {
       userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
       productId: productId ? new mongoose.Types.ObjectId(productId) : undefined,
       recommendationType: type,
-      productIds: recommendations.map((r) => r.productId),
+      productIds: recommendations.map(r => r.productId),
       scores: scoresMap,
       expiresAt,
     });
@@ -555,4 +561,3 @@ export class RecommendationService {
 }
 
 export const recommendationService = new RecommendationService();
-

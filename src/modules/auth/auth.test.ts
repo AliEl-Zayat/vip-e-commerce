@@ -1,11 +1,12 @@
 import request from 'supertest';
 import { Express } from 'express';
 import mongoose from 'mongoose';
+import { createHash, randomBytes } from 'crypto';
 import { createApp } from '../../app';
-import { User } from '../users/user.model';
+import { User, IUser } from '../users/user.model';
 import { QRSession } from './qr-session.model';
 import bcrypt from 'bcryptjs';
-import { generateAccessToken } from './token.util';
+import { generateAccessToken, generateRefreshToken } from './token.util';
 
 describe('Auth Module', () => {
   let app: Express;
@@ -166,7 +167,6 @@ describe('Auth Module', () => {
         name: 'Test User',
       });
 
-      const { generateRefreshToken } = require('./token.util');
       refreshToken = generateRefreshToken(user);
     });
 
@@ -181,9 +181,7 @@ describe('Auth Module', () => {
     });
 
     it('should reject request without refresh token', async () => {
-      const response = await request(app)
-        .post('/api/v1/auth/refresh')
-        .expect(401);
+      const response = await request(app).post('/api/v1/auth/refresh').expect(401);
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('Unauthorized');
@@ -192,9 +190,7 @@ describe('Auth Module', () => {
 
   describe('POST /api/v1/auth/logout', () => {
     it('should logout successfully', async () => {
-      const response = await request(app)
-        .post('/api/v1/auth/logout')
-        .expect(200);
+      const response = await request(app).post('/api/v1/auth/logout').expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.message).toBe('Logged out successfully');
@@ -242,12 +238,11 @@ describe('Auth Module', () => {
   describe('POST /api/v1/auth/reset-password', () => {
     let resetToken: string;
     let resetTokenHash: string;
-    let user: any;
+    let user: IUser;
 
     beforeEach(async () => {
-      const crypto = require('crypto');
-      resetToken = crypto.randomBytes(32).toString('hex');
-      resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+      resetToken = randomBytes(32).toString('hex');
+      resetTokenHash = createHash('sha256').update(resetToken).digest('hex');
 
       user = await User.create({
         email: 'test@example.com',
@@ -351,7 +346,7 @@ describe('Auth Module', () => {
   });
 
   describe('POST /api/v1/auth/otp/verify', () => {
-    let user: any;
+    let user: IUser;
     let otpCode: string;
 
     beforeEach(async () => {
@@ -449,9 +444,7 @@ describe('Auth Module', () => {
 
   describe('POST /api/v1/auth/qr/generate', () => {
     it('should generate QR code session successfully', async () => {
-      const response = await request(app)
-        .post('/api/v1/auth/qr/generate')
-        .expect(200);
+      const response = await request(app).post('/api/v1/auth/qr/generate').expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.sessionId).toBeDefined();
@@ -471,9 +464,8 @@ describe('Auth Module', () => {
     let qrToken: string;
 
     beforeEach(async () => {
-      const crypto = require('crypto');
-      sessionId = crypto.randomBytes(16).toString('hex');
-      qrToken = crypto.randomBytes(32).toString('hex');
+      sessionId = randomBytes(16).toString('hex');
+      qrToken = randomBytes(32).toString('hex');
 
       await QRSession.create({
         sessionId,
@@ -484,9 +476,7 @@ describe('Auth Module', () => {
     });
 
     it('should return pending status for new session', async () => {
-      const response = await request(app)
-        .get(`/api/v1/auth/qr/status/${sessionId}`)
-        .expect(200);
+      const response = await request(app).get(`/api/v1/auth/qr/status/${sessionId}`).expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.status).toBe('pending');
@@ -498,9 +488,7 @@ describe('Auth Module', () => {
       session!.scannedAt = new Date();
       await session!.save();
 
-      const response = await request(app)
-        .get(`/api/v1/auth/qr/status/${sessionId}`)
-        .expect(200);
+      const response = await request(app).get(`/api/v1/auth/qr/status/${sessionId}`).expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.status).toBe('scanned');
@@ -519,9 +507,7 @@ describe('Auth Module', () => {
       session!.authenticatedAt = new Date();
       await session!.save();
 
-      const response = await request(app)
-        .get(`/api/v1/auth/qr/status/${sessionId}`)
-        .expect(200);
+      const response = await request(app).get(`/api/v1/auth/qr/status/${sessionId}`).expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.status).toBe('authenticated');
@@ -535,9 +521,7 @@ describe('Auth Module', () => {
       session!.expiresAt = new Date(Date.now() - 1000);
       await session!.save();
 
-      const response = await request(app)
-        .get(`/api/v1/auth/qr/status/${sessionId}`)
-        .expect(200);
+      const response = await request(app).get(`/api/v1/auth/qr/status/${sessionId}`).expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.status).toBe('expired');
@@ -558,9 +542,8 @@ describe('Auth Module', () => {
     let qrToken: string;
 
     beforeEach(async () => {
-      const crypto = require('crypto');
-      sessionId = crypto.randomBytes(16).toString('hex');
-      qrToken = crypto.randomBytes(32).toString('hex');
+      sessionId = randomBytes(16).toString('hex');
+      qrToken = randomBytes(32).toString('hex');
 
       await QRSession.create({
         sessionId,
@@ -624,9 +607,8 @@ describe('Auth Module', () => {
     let userId: string;
 
     beforeEach(async () => {
-      const crypto = require('crypto');
-      sessionId = crypto.randomBytes(16).toString('hex');
-      qrToken = crypto.randomBytes(32).toString('hex');
+      sessionId = randomBytes(16).toString('hex');
+      qrToken = randomBytes(32).toString('hex');
 
       const user = await User.create({
         email: 'test@example.com',
@@ -726,4 +708,3 @@ describe('Auth Module', () => {
     });
   });
 });
-

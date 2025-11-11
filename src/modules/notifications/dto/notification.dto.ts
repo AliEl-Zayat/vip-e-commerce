@@ -16,7 +16,10 @@ export const createNotificationSchema = z.object({
   ]),
   title: z.string().min(1, 'Title is required'),
   message: z.string().min(1, 'Message is required'),
-  channels: z.array(z.enum(['email', 'push', 'in_app'])).optional().default(['in_app']),
+  channels: z
+    .array(z.enum(['email', 'push', 'in_app']))
+    .optional()
+    .default(['in_app']),
   data: z.record(z.unknown()).optional(),
 });
 
@@ -44,4 +47,3 @@ export const markAllReadSchema = z.object({
 export type CreateNotificationDto = z.infer<typeof createNotificationSchema>;
 export type UpdateNotificationDto = z.infer<typeof updateNotificationSchema>;
 export type MarkAllReadDto = z.infer<typeof markAllReadSchema>;
-

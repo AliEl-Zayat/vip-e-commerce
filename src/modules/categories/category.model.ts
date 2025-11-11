@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { MongooseTransformFn, MongooseTransformReturn } from '../../types/mongoose.types';
 
 export interface ICategory extends mongoose.Document {
   _id: mongoose.Types.ObjectId;
@@ -58,21 +59,21 @@ const categorySchema = new Schema<ICategory>(
     strict: true,
     toJSON: {
       virtuals: true,
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: ((_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
-      },
+      }) as MongooseTransformFn,
     },
     toObject: {
       virtuals: true,
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: ((_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
-      },
+      }) as MongooseTransformFn,
     },
   }
 );
@@ -138,5 +139,3 @@ categorySchema.virtual('productCount', {
 // Virtuals are already configured in schema options above
 
 export const Category = mongoose.model<ICategory>('Category', categorySchema);
-
-

@@ -1,6 +1,13 @@
+import { MongooseTransformReturn } from '../../types/mongoose.types';
 import mongoose, { Schema } from 'mongoose';
 
-export type OfferType = 'flash_sale' | 'bogo' | 'category_discount' | 'product_discount' | 'bundle' | 'free_shipping';
+export type OfferType =
+  | 'flash_sale'
+  | 'bogo'
+  | 'category_discount'
+  | 'product_discount'
+  | 'bundle'
+  | 'free_shipping';
 export type DiscountType = 'percentage' | 'fixed';
 
 export interface IOffer extends mongoose.Document {
@@ -12,31 +19,31 @@ export interface IOffer extends mongoose.Document {
   discountValue: number; // Percentage (0-100) or fixed amount in cents
   minPurchaseAmount?: number; // Minimum purchase to qualify (in cents)
   maxDiscountAmount?: number; // Maximum discount amount (for percentage, in cents)
-  
+
   // Flash sale specific
   flashSaleStart?: Date;
   flashSaleEnd?: Date;
   flashSaleStockLimit?: number; // Limited stock for flash sale
-  
+
   // BOGO specific
   bogoBuyQuantity?: number; // Buy X
   bogoGetQuantity?: number; // Get Y free
   bogoProductId?: mongoose.Types.ObjectId; // Specific product for BOGO
-  
+
   // Category/Product specific
   applicableCategories?: string[];
   applicableProducts?: mongoose.Types.ObjectId[];
-  
+
   // Bundle specific
   bundleProducts?: Array<{
     productId: mongoose.Types.ObjectId;
     quantity: number;
   }>;
   bundlePrice?: number; // Fixed price for bundle (in cents)
-  
+
   // Free shipping specific
   freeShippingMinAmount?: number; // Minimum order amount for free shipping
-  
+
   // General
   validFrom: Date;
   validUntil: Date;
@@ -78,8 +85,16 @@ const offerSchema = new Schema<IOffer>(
     offerType: {
       type: String,
       enum: {
-        values: ['flash_sale', 'bogo', 'category_discount', 'product_discount', 'bundle', 'free_shipping'],
-        message: 'Offer type must be one of: flash_sale, bogo, category_discount, product_discount, bundle, free_shipping',
+        values: [
+          'flash_sale',
+          'bogo',
+          'category_discount',
+          'product_discount',
+          'bundle',
+          'free_shipping',
+        ],
+        message:
+          'Offer type must be one of: flash_sale, bogo, category_discount, product_discount, bundle, free_shipping',
       },
       required: [true, 'Offer type is required'],
       // Index defined at schema level: offerSchema.index({ offerType: 1, isActive: 1 })
@@ -179,16 +194,16 @@ const offerSchema = new Schema<IOffer>(
     timestamps: true,
     strict: true,
     toJSON: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
       },
     },
     toObject: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
@@ -239,11 +254,17 @@ offerSchema.pre('save', function (next) {
   }
 
   // Validate category/product discounts
-  if (this.offerType === 'category_discount' && (!this.applicableCategories || this.applicableCategories.length === 0)) {
+  if (
+    this.offerType === 'category_discount' &&
+    (!this.applicableCategories || this.applicableCategories.length === 0)
+  ) {
     return next(new Error('Category discount requires at least one category'));
   }
 
-  if (this.offerType === 'product_discount' && (!this.applicableProducts || this.applicableProducts.length === 0)) {
+  if (
+    this.offerType === 'product_discount' &&
+    (!this.applicableProducts || this.applicableProducts.length === 0)
+  ) {
     return next(new Error('Product discount requires at least one product'));
   }
 
@@ -261,5 +282,3 @@ offerSchema.pre('save', function (next) {
 });
 
 export const Offer = mongoose.model<IOffer>('Offer', offerSchema);
-
-

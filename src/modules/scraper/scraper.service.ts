@@ -95,7 +95,7 @@ export class ScraperService {
       // - puppeteer for browser automation
       // - cheerio for HTML parsing
       // - axios for HTTP requests
-      
+
       // Placeholder implementation
       const scrapedData = await this.performScraping(job.url, job.selector);
 
@@ -110,9 +110,9 @@ export class ScraperService {
       if (job.productId && scrapedData.price && typeof scrapedData.price === 'number') {
         await this.handlePriceUpdate(job.productId.toString(), scrapedData.price);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       job.status = 'failed';
-      job.error = error.message || 'Scraping failed';
+      job.error = error instanceof Error ? error.message : 'Scraping failed';
       await job.save();
     }
   }
@@ -193,4 +193,3 @@ export class ScraperService {
 }
 
 export const scraperService = new ScraperService();
-

@@ -68,4 +68,3 @@ scraperJobSchema.index({ productId: 1 });
 scraperJobSchema.index({ lastScrapedAt: 1 });
 
 export const ScraperJob = mongoose.model<IScraperJob>('ScraperJob', scraperJobSchema);
-

@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { scraperService } from './scraper.service';
 import { CreateScraperJobDto, UpdateScraperJobDto } from './dto/scraper.dto';
 import { success } from '../../utils/response.util';
+import { IScraperJob, ScraperStatus } from './scraper.model';
+import { transformProduct } from '../products/product.controller';
+import { IProduct } from '../products/product.model';
 
 export class ScraperController {
   async createJob(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -61,19 +64,18 @@ export class ScraperController {
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
       const status = req.query.status as string | undefined;
 
-      const { jobs, meta } = await scraperService.getJobs(page, limit, status as any);
+      const { jobs, meta } = await scraperService.getJobs(
+        page,
+        limit,
+        status as unknown as ScraperStatus
+      );
 
       success(
         res,
-        jobs.map((j: any) => ({
+        jobs.map((j: IScraperJob) => ({
           id: j._id.toString(),
           url: j.url,
-          product: j.productId
-            ? {
-                id: j.productId._id.toString(),
-                title: j.productId.title,
-              }
-            : null,
+          product: j.productId ? transformProduct(j.productId as unknown as IProduct) : null,
           status: j.status,
           frequency: j.frequency,
           lastScrapedAt: j.lastScrapedAt,
@@ -120,4 +122,3 @@ export class ScraperController {
 }
 
 export const scraperController = new ScraperController();
-

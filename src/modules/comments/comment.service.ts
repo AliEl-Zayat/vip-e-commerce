@@ -4,9 +4,15 @@ import { CreateCommentDto, UpdateCommentDto, ModerateCommentDto } from './dto/co
 import { Product } from '../products/product.model';
 import { AppError } from '../../utils/error.util';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
+import {
+  CommentDto,
+  PopulatedCommentDocument,
+  mapCommentToDto,
+  attachReply,
+} from './comment.types';
 
 export class CommentService {
-  async create(userId: string, data: CreateCommentDto): Promise<IComment> {
+  async create(userId: string, data: CreateCommentDto): Promise<PopulatedCommentDocument> {
     const product = await Product.findById(data.productId);
     if (!product) {
       throw AppError.notFound('Product not found');
@@ -30,10 +36,18 @@ export class CommentService {
       parentId: data.parentId ? new mongoose.Types.ObjectId(data.parentId) : undefined,
     });
 
-    return comment.populate('userId', 'name email avatarUrl');
+    const populatedComment = (await comment.populate(
+      'userId',
+      'name email avatarUrl'
+    )) as PopulatedCommentDocument;
+    return populatedComment;
   }
 
-  async update(commentId: string, userId: string, data: UpdateCommentDto): Promise<IComment> {
+  async update(
+    commentId: string,
+    userId: string,
+    data: UpdateCommentDto
+  ): Promise<PopulatedCommentDocument> {
     const comment = await Comment.findOne({
       _id: commentId,
       userId: new mongoose.Types.ObjectId(userId),
@@ -49,7 +63,11 @@ export class CommentService {
     }
 
     await comment.save();
-    return comment.populate('userId', 'name email avatarUrl');
+    const populatedComment = (await comment.populate(
+      'userId',
+      'name email avatarUrl'
+    )) as PopulatedCommentDocument;
+    return populatedComment;
   }
 
   async delete(commentId: string, userId: string, userRole: string): Promise<void> {
@@ -96,9 +114,11 @@ export class CommentService {
     ]);
 
     // If including replies, organize them hierarchically
-    let organizedComments = comments;
+    let organizedComments: CommentDto[];
     if (includeReplies) {
-      organizedComments = this.organizeComments(comments as any[]);
+      organizedComments = this.organizeComments(comments as PopulatedCommentDocument[]);
+    } else {
+      organizedComments = (comments as PopulatedCommentDocument[]).map(mapCommentToDto);
     }
 
     const meta = buildPaginationMeta(page || 1, queryLimit, totalItems);
@@ -121,9 +141,11 @@ export class CommentService {
       Comment.countDocuments({ parentId: new mongoose.Types.ObjectId(commentId) }),
     ]);
 
+    const replyDtos = (replies as PopulatedCommentDocument[]).map(mapCommentToDto);
+
     const meta = buildPaginationMeta(page || 1, queryLimit, totalItems);
 
-    return { replies, meta };
+    return { replies: replyDtos, meta };
   }
 
   async upvote(commentId: string): Promise<IComment> {
@@ -173,26 +195,32 @@ export class CommentService {
     return comment;
   }
 
-  private organizeComments(comments: any[]): any[] {
-    const commentMap = new Map();
-    const rootComments: any[] = [];
+  private organizeComments(comments: PopulatedCommentDocument[]): CommentDto[] {
+    const commentMap = new Map<string, CommentDto>();
+    const rootComments: CommentDto[] = [];
 
-    // First pass: create map of all comments
-    comments.forEach((comment) => {
-      commentMap.set(comment._id.toString(), { ...comment.toObject(), replies: [] });
+    comments.forEach(comment => {
+      commentMap.set(comment._id.toString(), mapCommentToDto(comment));
     });
 
-    // Second pass: organize hierarchy
-    comments.forEach((comment) => {
-      const commentObj = commentMap.get(comment._id.toString());
-      if (comment.parentId) {
-        const parent = commentMap.get(comment.parentId.toString());
-        if (parent) {
-          parent.replies.push(commentObj);
-        }
-      } else {
-        rootComments.push(commentObj);
+    comments.forEach(comment => {
+      const commentId = comment._id.toString();
+      const commentDto = commentMap.get(commentId);
+      if (!commentDto) {
+        return;
       }
+
+      const parentId = commentDto.parentId;
+
+      if (parentId) {
+        const parentDto = commentMap.get(parentId);
+        if (parentDto) {
+          attachReply(parentDto, commentDto);
+          return;
+        }
+      }
+
+      rootComments.push(commentDto);
     });
 
     return rootComments;
@@ -200,4 +228,3 @@ export class CommentService {
 }
 
 export const commentService = new CommentService();
-

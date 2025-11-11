@@ -1,7 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import { wishlistService } from './wishlist.service';
-import { CreateWishlistDto, UpdateWishlistDto, AddItemToWishlistDto, UpdateWishlistItemDto } from './dto/wishlist.dto';
+import {
+  CreateWishlistDto,
+  UpdateWishlistDto,
+  AddItemToWishlistDto,
+  UpdateWishlistItemDto,
+} from './dto/wishlist.dto';
 import { success } from '../../utils/response.util';
+import { IWishlist } from './wishlist.model';
+import { transformProduct } from '../products/product.controller';
+import { IProduct } from '../products/product.model';
+import { IUser } from '../users/user.model';
 
 export class WishlistController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -73,11 +82,15 @@ export class WishlistController {
       const page = req.query.page ? parseInt(String(req.query.page), 10) : undefined;
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
 
-      const { wishlists, meta } = await wishlistService.getUserWishlists(req.user._id.toString(), page, limit);
+      const { wishlists, meta } = await wishlistService.getUserWishlists(
+        req.user._id.toString(),
+        page,
+        limit
+      );
 
       success(
         res,
-        wishlists.map((w: any) => ({
+        wishlists.map((w: IWishlist) => ({
           id: w._id.toString(),
           name: w.name,
           description: w.description,
@@ -102,14 +115,14 @@ export class WishlistController {
 
       success(
         res,
-        wishlists.map((w: any) => ({
+        wishlists.map((w: IWishlist) => ({
           id: w._id.toString(),
           name: w.name,
           description: w.description,
           user: w.userId
             ? {
                 id: w.userId._id.toString(),
-                name: w.userId.name,
+                name: (w.userId as unknown as IUser)?.name,
               }
             : null,
           itemsCount: w.items.length,
@@ -133,22 +146,14 @@ export class WishlistController {
         name: wishlist.name,
         description: wishlist.description,
         isPublic: wishlist.isPublic,
-        user: (wishlist.userId as any)
+        user: wishlist.userId
           ? {
-              id: (wishlist.userId as any)._id.toString(),
-              name: (wishlist.userId as any).name,
+              id: wishlist.userId._id.toString(),
+              name: (wishlist.userId as unknown as IUser)?.name,
             }
           : null,
-        items: wishlist.items.map((item: any) => ({
-          product: item.productId
-            ? {
-                id: item.productId._id.toString(),
-                title: item.productId.title,
-                slug: item.productId.slug,
-                price: item.productId.price,
-                images: item.productId.images,
-              }
-            : null,
+        items: wishlist.items.map((item: IWishlist['items'][number]) => ({
+          product: item.productId ? transformProduct(item.productId as unknown as IProduct) : null,
           notes: item.notes,
           addedAt: item.addedAt,
         })),
@@ -222,4 +227,3 @@ export class WishlistController {
 }
 
 export const wishlistController = new WishlistController();
-

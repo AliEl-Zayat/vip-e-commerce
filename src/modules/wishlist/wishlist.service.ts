@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 import { Wishlist, IWishlist } from './wishlist.model';
-import { CreateWishlistDto, UpdateWishlistDto, AddItemToWishlistDto, UpdateWishlistItemDto } from './dto/wishlist.dto';
+import {
+  CreateWishlistDto,
+  UpdateWishlistDto,
+  AddItemToWishlistDto,
+  UpdateWishlistItemDto,
+} from './dto/wishlist.dto';
 import { Product } from '../products/product.model';
 import { userBehaviorService } from '../user-behavior/user-behavior.service';
 import { AppError } from '../../utils/error.util';
@@ -107,7 +112,11 @@ export class WishlistService {
     return wishlist;
   }
 
-  async addItem(wishlistId: string, userId: string, data: AddItemToWishlistDto): Promise<IWishlist> {
+  async addItem(
+    wishlistId: string,
+    userId: string,
+    data: AddItemToWishlistDto
+  ): Promise<IWishlist> {
     const wishlist = await Wishlist.findOne({
       _id: wishlistId,
       userId: new mongoose.Types.ObjectId(userId),
@@ -123,9 +132,7 @@ export class WishlistService {
     }
 
     // Check if product already in wishlist
-    const existingItem = wishlist.items.find(
-      (item) => item.productId.toString() === data.productId
-    );
+    const existingItem = wishlist.items.find(item => item.productId.toString() === data.productId);
     if (existingItem) {
       throw AppError.conflict('Product already in wishlist');
     }
@@ -150,7 +157,7 @@ export class WishlistService {
           wishlistId: wishlist._id.toString(),
         },
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('[WishlistService] Error tracking wishlist add:', err);
       });
 
@@ -167,9 +174,7 @@ export class WishlistService {
       throw AppError.notFound('Wishlist not found');
     }
 
-    wishlist.items = wishlist.items.filter(
-      (item) => item.productId.toString() !== productId
-    );
+    wishlist.items = wishlist.items.filter(item => item.productId.toString() !== productId);
 
     await wishlist.save();
     return wishlist.populate('items.productId');
@@ -190,7 +195,7 @@ export class WishlistService {
       throw AppError.notFound('Wishlist not found');
     }
 
-    const item = wishlist.items.find((item) => item.productId.toString() === productId);
+    const item = wishlist.items.find(item => item.productId.toString() === productId);
     if (!item) {
       throw AppError.notFound('Item not found in wishlist');
     }
@@ -220,4 +225,3 @@ export class WishlistService {
 }
 
 export const wishlistService = new WishlistService();
-

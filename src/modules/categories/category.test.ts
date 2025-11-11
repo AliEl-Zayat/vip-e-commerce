@@ -7,6 +7,7 @@ import { Category } from './category.model';
 import { Product } from '../products/product.model';
 import bcrypt from 'bcryptjs';
 import { generateAccessToken } from '../auth/token.util';
+import type { CategoryResponse } from './category.types';
 
 describe('Category Module', () => {
   let app: Express;
@@ -169,7 +170,7 @@ describe('Category Module', () => {
       const response = await request(app).get('/api/v1/categories?isActive=true').expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.every((c: { isActive: boolean }) => c.isActive)).toBe(true);
+      expect(response.body.data.every((c: CategoryResponse) => c.isActive)).toBe(true);
     });
 
     it('should filter by parent', async () => {
@@ -189,7 +190,11 @@ describe('Category Module', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.every((c: { parentId: any }) => c.parentId?.id === parent._id.toString())).toBe(true);
+      const favoritesUnderParent = response.body.data.every(
+        (c: CategoryResponse) => c.parentId?.id === parent._id.toString()
+      );
+
+      expect(favoritesUnderParent).toBe(true);
     });
   });
 
@@ -228,7 +233,9 @@ describe('Category Module', () => {
       expect(response.body.success).toBe(true);
       expect(Array.isArray(response.body.data)).toBe(true);
 
-      const electronics = response.body.data.find((c: { name: string }) => c.name === 'Electronics');
+      const electronics = response.body.data.find(
+        (c: { name: string }) => c.name === 'Electronics'
+      );
       expect(electronics).toBeDefined();
       expect(electronics.children).toBeDefined();
       expect(electronics.children.length).toBeGreaterThan(0);
@@ -311,7 +318,9 @@ describe('Category Module', () => {
         parentId: parent._id,
       });
 
-      const response = await request(app).get(`/api/v1/categories/${parent._id}/children`).expect(200);
+      const response = await request(app)
+        .get(`/api/v1/categories/${parent._id}/children`)
+        .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.children).toBeDefined();
@@ -460,5 +469,3 @@ describe('Category Module', () => {
     });
   });
 });
-
-

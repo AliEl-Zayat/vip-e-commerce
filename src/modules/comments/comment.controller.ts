@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { commentService } from './comment.service';
 import { CreateCommentDto, UpdateCommentDto, ModerateCommentDto } from './dto/comment.dto';
 import { success } from '../../utils/response.util';
+import { mapCommentToDto, CommentDto } from './comment.types';
 
 export class CommentController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -12,26 +13,21 @@ export class CommentController {
 
       const data = req.body as CreateCommentDto;
       const comment = await commentService.create(req.user._id.toString(), data);
+      const dto = mapCommentToDto(comment);
 
       success(
         res,
         {
-          id: comment._id.toString(),
-          productId: comment.productId.toString(),
-          userId: (comment.userId as any)?._id?.toString(),
-          user: comment.userId
-            ? {
-                id: (comment.userId as any)._id.toString(),
-                name: (comment.userId as any).name,
-                avatarUrl: (comment.userId as any).avatarUrl,
-              }
-            : null,
-          content: comment.content,
-          parentId: comment.parentId?.toString(),
-          upvotes: comment.upvotes,
-          downvotes: comment.downvotes,
-          isEdited: comment.isEdited,
-          createdAt: comment.createdAt,
+          id: dto.id,
+          productId: dto.productId,
+          userId: dto.userId,
+          user: dto.user,
+          content: dto.content,
+          parentId: dto.parentId,
+          upvotes: dto.upvotes,
+          downvotes: dto.downvotes,
+          isEdited: dto.isEdited,
+          createdAt: dto.createdAt,
         },
         201
       );
@@ -86,30 +82,7 @@ export class CommentController {
         includeReplies
       );
 
-      success(
-        res,
-        Array.isArray(comments)
-          ? comments.map((c: any) => ({
-              id: c._id?.toString() || c.id,
-              user: c.userId
-                ? {
-                    id: c.userId._id?.toString(),
-                    name: c.userId.name,
-                    avatarUrl: c.userId.avatarUrl,
-                  }
-                : c.user,
-              content: c.content,
-              parentId: c.parentId?.toString(),
-              upvotes: c.upvotes,
-              downvotes: c.downvotes,
-              isEdited: c.isEdited,
-              replies: c.replies || [],
-              createdAt: c.createdAt,
-            }))
-          : [],
-        200,
-        meta as unknown as Record<string, unknown>
-      );
+      success(res, comments as CommentDto[], 200, meta as unknown as Record<string, unknown>);
     } catch (err) {
       next(err);
     }
@@ -122,25 +95,7 @@ export class CommentController {
 
       const { replies, meta } = await commentService.getReplies(req.params.id, page, limit);
 
-      success(
-        res,
-        replies.map((r: any) => ({
-          id: r._id.toString(),
-          user: r.userId
-            ? {
-                id: r.userId._id.toString(),
-                name: r.userId.name,
-                avatarUrl: r.userId.avatarUrl,
-              }
-            : null,
-          content: r.content,
-          upvotes: r.upvotes,
-          downvotes: r.downvotes,
-          createdAt: r.createdAt,
-        })),
-        200,
-        meta as unknown as Record<string, unknown>
-      );
+      success(res, replies as CommentDto[], 200, meta as unknown as Record<string, unknown>);
     } catch (err) {
       next(err);
     }
@@ -186,4 +141,3 @@ export class CommentController {
 }
 
 export const commentController = new CommentController();
-

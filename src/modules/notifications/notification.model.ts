@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { MongooseTransformFn, MongooseTransformReturn } from '../../types/mongoose.types';
 
 export type NotificationType =
   | 'order_placed'
@@ -94,20 +95,20 @@ const notificationSchema = new Schema<INotification>(
     timestamps: true,
     strict: true,
     toJSON: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: ((_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
-      },
+      }) as MongooseTransformFn,
     },
     toObject: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: ((_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
-      },
+      }) as MongooseTransformFn,
     },
   }
 );
@@ -118,4 +119,3 @@ notificationSchema.index({ createdAt: -1 });
 notificationSchema.index({ userId: 1, read: 1, type: 1 });
 
 export const Notification = mongoose.model<INotification>('Notification', notificationSchema);
-

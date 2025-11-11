@@ -3,11 +3,7 @@ import { couponController } from './coupon.controller';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { roleMiddleware } from '../../middlewares/role.middleware';
 import { validate } from '../../middlewares/validation.middleware';
-import {
-  createCouponSchema,
-  updateCouponSchema,
-  applyCouponSchema,
-} from './dto/coupon.dto';
+import { createCouponSchema, updateCouponSchema, applyCouponSchema } from './dto/coupon.dto';
 
 const router: Router = Router();
 
@@ -217,5 +213,3 @@ router.delete(
 );
 
 export default router;
-
-

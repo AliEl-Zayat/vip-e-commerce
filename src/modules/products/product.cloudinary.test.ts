@@ -98,4 +98,3 @@ describe('Product Image Upload', () => {
     expect(response.body.success).toBe(false);
   });
 });
-

@@ -1,8 +1,9 @@
 import mongoose, { Schema } from 'mongoose';
 import { MongooseTransformReturn, MongooseTransformFn } from '../../types/mongoose.types';
+import { IProduct } from '../products/product.model';
 
 export interface ICartItem {
-  productId: mongoose.Types.ObjectId;
+  productId: IProduct;
   quantity: number;
   price: number; // Price at time of adding to cart
 }
@@ -90,4 +91,3 @@ cartSchema.index({ userId: 1 }, { unique: true });
 cartSchema.index({ 'items.productId': 1 });
 
 export const Cart = mongoose.model<ICart>('Cart', cartSchema);
-

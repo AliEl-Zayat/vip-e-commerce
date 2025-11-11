@@ -123,4 +123,3 @@ const seed = async (): Promise<void> => {
 };
 
 seed();
-

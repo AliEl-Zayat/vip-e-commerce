@@ -35,7 +35,12 @@ const router: Router = Router();
  *       201:
  *         description: Comment created successfully
  */
-router.post('/', authMiddleware, validate(createCommentSchema), commentController.create.bind(commentController));
+router.post(
+  '/',
+  authMiddleware,
+  validate(createCommentSchema),
+  commentController.create.bind(commentController)
+);
 
 /**
  * @swagger
@@ -63,7 +68,12 @@ router.post('/', authMiddleware, validate(createCommentSchema), commentControlle
  *       200:
  *         description: Comment updated successfully
  */
-router.patch('/:id', authMiddleware, validate(updateCommentSchema), commentController.update.bind(commentController));
+router.patch(
+  '/:id',
+  authMiddleware,
+  validate(updateCommentSchema),
+  commentController.update.bind(commentController)
+);
 
 /**
  * @swagger
@@ -218,4 +228,3 @@ router.patch(
 );
 
 export default router;
-

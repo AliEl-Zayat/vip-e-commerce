@@ -83,10 +83,14 @@ export const createApp = (): Express => {
   });
 
   // Swagger documentation
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'Ecommerce API Documentation',
-  }));
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'Ecommerce API Documentation',
+    })
+  );
 
   // API routes
   app.get('/api/v1', (_req, res) => {
@@ -158,4 +162,3 @@ export const createApp = (): Express => {
 
   return app;
 };
-

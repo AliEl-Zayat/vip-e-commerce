@@ -117,11 +117,7 @@ describe('Edge Cases', () => {
 
       // Simulate concurrent updates
       const updates = Array.from({ length: 5 }, () =>
-        Product.findByIdAndUpdate(
-          productId,
-          { $inc: { stock: -1 } },
-          { new: true }
-        )
+        Product.findByIdAndUpdate(productId, { $inc: { stock: -1 } }, { new: true })
       );
 
       await Promise.all(updates);
@@ -134,7 +130,8 @@ describe('Edge Cases', () => {
   describe('Invalid JWT Tokens', () => {
     it('should reject expired access token', async () => {
       // Create an expired token (this would require mocking time or using a real expired token)
-      const expiredToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyMzkwMjJ9.invalid';
+      const expiredToken =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyMzkwMjJ9.invalid';
 
       const response = await request(app)
         .get('/api/v1/profile')
@@ -155,9 +152,7 @@ describe('Edge Cases', () => {
     });
 
     it('should reject request without token', async () => {
-      const response = await request(app)
-        .get('/api/v1/profile')
-        .expect(401);
+      const response = await request(app).get('/api/v1/profile').expect(401);
 
       expect(response.body.success).toBe(false);
     });
@@ -191,7 +186,7 @@ describe('Edge Cases', () => {
       otherSellerToken = generateAccessToken(otherSeller);
     });
 
-    it('should prevent seller from updating other seller\'s product', async () => {
+    it("should prevent seller from updating other seller's product", async () => {
       const response = await request(app)
         .patch(`/api/v1/products/${productId}`)
         .set('Authorization', `Bearer ${otherSellerToken}`)
@@ -298,4 +293,3 @@ describe('Edge Cases', () => {
     });
   });
 });
-

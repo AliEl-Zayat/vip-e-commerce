@@ -7,7 +7,7 @@ import { isAuthenticated } from '../utils/type-guards.util';
  */
 export const trackProductView = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   // Track asynchronously without blocking the request
@@ -23,7 +23,7 @@ export const trackProductView = async (
           duration: 0, // Can be updated by frontend if needed
         },
       })
-      .catch((err) => {
+      .catch(err => {
         // Log error but don't fail the request
         console.error('[TrackBehavior] Error tracking product view:', err);
       });
@@ -37,7 +37,7 @@ export const trackProductView = async (
  */
 export const trackSearchQuery = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   if (isAuthenticated(req) && req.query.q) {
@@ -57,11 +57,10 @@ export const trackSearchQuery = async (
           },
         },
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('[TrackBehavior] Error tracking search query:', err);
       });
   }
 
   next();
 };
-

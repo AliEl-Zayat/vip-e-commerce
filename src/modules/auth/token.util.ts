@@ -47,4 +47,3 @@ export const verifyRefreshToken = (token: string): TokenPayload => {
     throw new Error('Invalid or expired refresh token');
   }
 };
-

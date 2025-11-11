@@ -2,7 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { ratingService } from './rating.service';
 import { CreateRatingDto, UpdateRatingDto } from './dto/rating.dto';
 import { success } from '../../utils/response.util';
+import { IRating } from './rating.model';
 
+export const transformRating = (rating: IRating) => ({
+  id: rating._id.toString(),
+  productId: rating.productId.toString(),
+  userId: rating.userId.toString(),
+  rating: rating.rating,
+  review: rating.review,
+});
 export class RatingController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -80,20 +88,8 @@ export class RatingController {
 
       success(
         res,
-        ratings.map((r: any) => ({
-          id: r._id.toString(),
-          rating: r.rating,
-          review: r.review,
-          isVerifiedPurchase: r.isVerifiedPurchase,
-          helpfulCount: r.helpfulCount,
-          user: r.userId
-            ? {
-                id: r.userId._id.toString(),
-                name: r.userId.name,
-                avatarUrl: r.userId.avatarUrl,
-              }
-            : null,
-          createdAt: r.createdAt,
+        ratings.map((r: IRating) => ({
+          ...transformRating(r as unknown as IRating),
         })),
         200,
         meta as unknown as Record<string, unknown>
@@ -118,7 +114,10 @@ export class RatingController {
         throw new Error('User not authenticated');
       }
 
-      const rating = await ratingService.getUserRating(req.params.productId, req.user._id.toString());
+      const rating = await ratingService.getUserRating(
+        req.params.productId,
+        req.user._id.toString()
+      );
 
       if (!rating) {
         success(res, null, 200);
@@ -152,4 +151,3 @@ export class RatingController {
 }
 
 export const ratingController = new RatingController();
-

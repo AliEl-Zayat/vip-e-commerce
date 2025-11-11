@@ -16,4 +16,3 @@ export const sendPushNotificationSchema = z.object({
 
 export type RegisterPushTokenDto = z.infer<typeof registerPushTokenSchema>;
 export type SendPushNotificationDto = z.infer<typeof sendPushNotificationSchema>;
-

@@ -1,27 +1,45 @@
-import { Cart, ICart } from './cart.model';
-import { Product } from '../products/product.model';
+import { Cart, ICart, ICartItem } from './cart.model';
+import { IProduct, Product } from '../products/product.model';
 import { AddToCartDto, UpdateCartItemDto } from './dto/cart.dto';
 import { couponService } from '../coupons/coupon.service';
-import { offerService } from '../offers/offer.service';
+import { offerService, OfferApplicationResult } from '../offers/offer.service';
 import { userBehaviorService } from '../user-behavior/user-behavior.service';
 import { AppError } from '../../utils/error.util';
+import type { CartItemWithProduct, PopulatedCartDocument } from './cart.types';
+import { isCartItemWithProduct } from './cart.types';
 
 export class CartService {
-  async getCart(userId: string): Promise<ICart> {
-    let cart = await Cart.findOne({ userId }).populate('items.productId');
-    if (!cart) {
-      cart = await Cart.create({ userId, items: [] });
+  async getCart(userId: string): Promise<PopulatedCartDocument> {
+    const existingCart = await Cart.findOne({ userId });
+
+    if (existingCart) {
+      await existingCart.populate('items.productId');
+      return existingCart as PopulatedCartDocument;
     }
-    return cart;
+
+    const createdCart = await Cart.create({ userId, items: [] });
+    await createdCart.populate('items.productId');
+    return createdCart as PopulatedCartDocument;
   }
 
-  async getCartWithOffers(userId: string) {
+  async getCartWithOffers(userId: string): Promise<{
+    cart: PopulatedCartDocument;
+    subtotal: number;
+    offerDiscount: number;
+    couponDiscount: number;
+    totalDiscount: number;
+    freeShipping: boolean;
+    applicableOffers: OfferApplicationResult['applicableOffers'];
+  }> {
     const cart = await this.getCart(userId);
     const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     // Prepare cart items for offer calculation
-    const cartItems = cart.items.map((item: any) => {
-      const product = item.productId;
+    const cartItems = cart.items.map((item: CartItemWithProduct | ICartItem) => {
+      const product = isCartItemWithProduct(item)
+        ? item.productId
+        : (item as unknown as ICartItem).productId;
+
       return {
         productId: product._id.toString(),
         quantity: item.quantity,
@@ -50,7 +68,7 @@ export class CartService {
     };
   }
 
-  async addToCart(userId: string, data: AddToCartDto): Promise<ICart> {
+  async addToCart(userId: string, data: AddToCartDto): Promise<PopulatedCartDocument> {
     // Get or create cart
     let cart = await Cart.findOne({ userId });
     if (!cart) {
@@ -69,7 +87,7 @@ export class CartService {
 
     // Check if product already in cart
     const existingItemIndex = cart.items.findIndex(
-      (item) => item.productId.toString() === data.productId
+      item => item.productId.toString() === data.productId
     );
 
     if (existingItemIndex >= 0) {
@@ -83,7 +101,7 @@ export class CartService {
     } else {
       // Add new item
       cart.items.push({
-        productId: product._id,
+        productId: product as unknown as IProduct,
         quantity: data.quantity,
         price: product.price,
       });
@@ -108,20 +126,25 @@ export class CartService {
           tags: product.tags,
         },
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('[CartService] Error tracking add to cart:', err);
       });
 
-    return cart.populate('items.productId');
+    const populatedCart = (await cart.populate('items.productId')) as PopulatedCartDocument;
+    return populatedCart;
   }
 
-  async updateCartItem(userId: string, productId: string, data: UpdateCartItemDto): Promise<ICart> {
+  async updateCartItem(
+    userId: string,
+    productId: string,
+    data: UpdateCartItemDto
+  ): Promise<PopulatedCartDocument> {
     const cart = await Cart.findOne({ userId });
     if (!cart) {
       throw AppError.notFound('Cart not found');
     }
 
-    const itemIndex = cart.items.findIndex((item) => item.productId.toString() === productId);
+    const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
     if (itemIndex === -1) {
       throw AppError.notFound('Item not found in cart');
     }
@@ -145,16 +168,16 @@ export class CartService {
     }
 
     await cart.save();
-    return cart.populate('items.productId');
+    return (await cart.populate('items.productId')) as PopulatedCartDocument;
   }
 
-  async removeFromCart(userId: string, productId: string): Promise<ICart> {
+  async removeFromCart(userId: string, productId: string): Promise<PopulatedCartDocument> {
     const cart = await Cart.findOne({ userId });
     if (!cart) {
       throw AppError.notFound('Cart not found');
     }
 
-    cart.items = cart.items.filter((item) => item.productId.toString() !== productId);
+    cart.items = cart.items.filter(item => item.productId.toString() !== productId);
 
     // Revalidate coupon if present
     if (cart.couponCode) {
@@ -168,12 +191,19 @@ export class CartService {
       .track(userId, {
         eventType: 'remove_from_cart',
         productId,
+        eventData: {
+          quantity: cart.items.find(item => item.productId.toString() === productId)?.quantity,
+          price: cart.items.find(item => item.productId.toString() === productId)?.price,
+          category: cart.items.find(item => item.productId.toString() === productId)?.productId
+            .category,
+          tags: cart.items.find(item => item.productId.toString() === productId)?.productId.tags,
+        },
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('[CartService] Error tracking remove from cart:', err);
       });
 
-    return cart.populate('items.productId');
+    return (await cart.populate('items.productId')) as PopulatedCartDocument;
   }
 
   async clearCart(userId: string): Promise<void> {
@@ -186,46 +216,58 @@ export class CartService {
     }
   }
 
-  async applyCoupon(userId: string, couponCode: string): Promise<ICart> {
-    const cart = await Cart.findOne({ userId }).populate('items.productId');
+  async applyCoupon(userId: string, couponCode: string): Promise<PopulatedCartDocument> {
+    const cart = await Cart.findOne({ userId });
     if (!cart || cart.items.length === 0) {
       throw AppError.badRequest('Cart is empty');
     }
 
+    await cart.populate('items.productId');
+    const populatedCart = cart as PopulatedCartDocument;
+
     // Calculate total amount
-    const totalAmount = cart.items.reduce(
+    const totalAmount = populatedCart.items.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
 
     // Prepare cart items for validation
-    const cartItems = cart.items.map((item) => ({
-      productId: item.productId.toString(),
-      quantity: item.quantity,
-      price: item.price,
-    }));
+    const cartItems = populatedCart.items.map((item: CartItemWithProduct | ICartItem) => {
+      const productId = isCartItemWithProduct(item)
+        ? item.productId.toString()
+        : (item as unknown as ICartItem).productId.toString();
 
-    // Validate coupon
-    const validation = await couponService.validateCoupon(
+      return {
+        productId: productId as unknown as IProduct,
+        quantity: item.quantity,
+        price: item.price,
+      };
+    });
+
+    const coupon = await couponService.validateCoupon(
       couponCode,
       userId,
-      cartItems,
+      cartItems.map(item => ({
+        productId: (item.productId as unknown as IProduct)._id.toString(),
+        quantity: item.quantity,
+        price: item.price,
+      })),
       totalAmount
     );
 
-    if (!validation.isValid) {
-      throw AppError.badRequest(validation.error || 'Invalid coupon');
+    if (!coupon) {
+      throw AppError.badRequest('Invalid or expired coupon');
     }
 
-    // Apply coupon to cart
-    cart.couponCode = couponCode.toUpperCase();
-    cart.discountAmount = validation.discountAmount;
+    populatedCart.couponCode = coupon.coupon?.code || undefined;
+    populatedCart.discountAmount = coupon.discountAmount;
 
-    await cart.save();
-    return cart.populate('items.productId');
+    await populatedCart.save();
+    await populatedCart.populate('items.productId');
+    return populatedCart;
   }
 
-  async removeCoupon(userId: string): Promise<ICart> {
+  async removeCoupon(userId: string): Promise<PopulatedCartDocument> {
     const cart = await Cart.findOne({ userId });
     if (!cart) {
       throw AppError.notFound('Cart not found');
@@ -233,44 +275,33 @@ export class CartService {
 
     cart.couponCode = undefined;
     cart.discountAmount = 0;
+
     await cart.save();
-    return cart.populate('items.productId');
+    await cart.populate('items.productId');
+    return cart as PopulatedCartDocument;
   }
 
   private async revalidateCoupon(cart: ICart, userId: string): Promise<void> {
-    if (!cart.couponCode || cart.items.length === 0) {
-      cart.couponCode = undefined;
-      cart.discountAmount = 0;
+    if (!cart.couponCode) {
       return;
     }
 
-    const totalAmount = cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+    try {
+      const totalAmount = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    const cartItems = cart.items.map((item) => ({
-      productId: item.productId.toString(),
-      quantity: item.quantity,
-      price: item.price,
-    }));
+      const cartItems = cart.items.map(item => ({
+        productId: (item.productId as unknown as IProduct)._id.toString(),
+        quantity: item.quantity,
+        price: item.price,
+      }));
 
-    const validation = await couponService.validateCoupon(
-      cart.couponCode,
-      userId,
-      cartItems,
-      totalAmount
-    );
-
-    if (!validation.isValid) {
-      // Remove invalid coupon
+      await couponService.validateCoupon(cart.couponCode, userId, cartItems, totalAmount);
+    } catch (error) {
+      console.warn('[CartService] Coupon became invalid, removing from cart:', error);
       cart.couponCode = undefined;
       cart.discountAmount = 0;
-    } else {
-      cart.discountAmount = validation.discountAmount;
     }
   }
 }
 
 export const cartService = new CartService();
-

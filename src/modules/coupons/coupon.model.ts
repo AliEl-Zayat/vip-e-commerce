@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { MongooseTransformFn, MongooseTransformReturn } from '../../types/mongoose.types';
 
 export type DiscountType = 'percentage' | 'fixed';
 export type CouponApplicableTo = 'all' | 'category' | 'product';
@@ -140,20 +141,20 @@ const couponSchema = new Schema<ICoupon>(
     timestamps: true,
     strict: true,
     toJSON: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: ((_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
-      },
+      }) as MongooseTransformFn,
     },
     toObject: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: ((_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
-      },
+      }) as MongooseTransformFn,
     },
   }
 );
@@ -175,5 +176,3 @@ couponSchema.pre('save', function (next) {
 });
 
 export const Coupon = mongoose.model<ICoupon>('Coupon', couponSchema);
-
-

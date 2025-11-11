@@ -100,7 +100,7 @@ export class OrderController {
 
       success(
         res,
-        orders.map((order) => ({
+        orders.map(order => ({
           id: order._id.toString(),
           orderNumber: order.orderNumber,
           userId: order.userId.toString(),
@@ -208,4 +208,3 @@ export class OrderController {
 }
 
 export const orderController = new OrderController();
-

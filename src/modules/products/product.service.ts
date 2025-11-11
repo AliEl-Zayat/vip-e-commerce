@@ -107,11 +107,7 @@ export const list = async (query: ProductListQuery) => {
 
   // Execute query
   const [products, totalItems] = await Promise.all([
-    Product.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .populate('sellerId', 'name email'),
+    Product.find(filter).sort(sort).skip(skip).limit(limit).populate('sellerId', 'name email'),
     Product.countDocuments(filter),
   ]);
 
@@ -190,11 +186,7 @@ export const remove = async (id: string, userId: string, userRole: string): Prom
 };
 
 export const updateStock = async (id: string, quantity: number): Promise<IProduct> => {
-  const product = await Product.findByIdAndUpdate(
-    id,
-    { $inc: { stock: quantity } },
-    { new: true }
-  );
+  const product = await Product.findByIdAndUpdate(id, { $inc: { stock: quantity } }, { new: true });
 
   if (!product) {
     throw AppError.notFound('Product not found');

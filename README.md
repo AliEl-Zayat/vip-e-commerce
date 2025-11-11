@@ -33,22 +33,26 @@ Production-ready ecommerce backend built with Express.js, TypeScript, MongoDB, a
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd ecom-cursor
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Copy environment variables:
+
 ```bash
 cp env.example .env
 ```
 
 4. Update `.env` with your configuration:
+
 ```env
 MONGODB_URI=mongodb://localhost:27017/ecommerce
 JWT_ACCESS_TOKEN_SECRET=your-secret-key
@@ -81,6 +85,7 @@ pnpm seed
 ```
 
 This creates:
+
 - Admin user: `admin@example.com` / `admin123`
 - Seller user: `seller@example.com` / `seller123`
 - Customer user: `customer@example.com` / `customer123`
@@ -89,16 +94,19 @@ This creates:
 ## Testing
 
 Run all tests:
+
 ```bash
 pnpm test
 ```
 
 Run tests in watch mode:
+
 ```bash
 pnpm test:watch
 ```
 
 Run tests with coverage:
+
 ```bash
 pnpm test:ci
 ```
@@ -120,6 +128,7 @@ docker-compose up -d
 ```
 
 This will:
+
 - Start MongoDB container
 - Build and start the application container
 - Expose the API on port 3000
@@ -133,6 +142,7 @@ docker-compose down
 ## API Documentation
 
 Interactive API documentation is available at `/api-docs` when the server is running. The Swagger UI provides:
+
 - Complete endpoint documentation
 - Request/response schemas
 - Try-it-out functionality
@@ -281,6 +291,7 @@ src/
 ## CI/CD
 
 GitHub Actions workflow runs on push/PR:
+
 - Linting
 - Type checking
 - Tests with coverage
@@ -307,4 +318,3 @@ ISC
 2. Ensure test coverage >= 90%
 3. Follow existing code style
 4. Update documentation as needed
-

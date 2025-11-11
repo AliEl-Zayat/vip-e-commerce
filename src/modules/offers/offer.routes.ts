@@ -53,7 +53,11 @@ router.get('/active', offerController.getActiveOffers.bind(offerController));
  *       200:
  *         description: Offers applied successfully
  */
-router.post('/apply', validate(applyOfferSchema), offerController.applyOffers.bind(offerController));
+router.post(
+  '/apply',
+  validate(applyOfferSchema),
+  offerController.applyOffers.bind(offerController)
+);
 
 /**
  * @swagger
@@ -213,5 +217,3 @@ router.delete(
 );
 
 export default router;
-
-

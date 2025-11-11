@@ -97,13 +97,10 @@ describe('Cart Module', () => {
 
     it('should update quantity if product already in cart', async () => {
       // Add item first
-      await request(app)
-        .post('/api/v1/cart')
-        .set('Authorization', `Bearer ${customerToken}`)
-        .send({
-          productId,
-          quantity: 2,
-        });
+      await request(app).post('/api/v1/cart').set('Authorization', `Bearer ${customerToken}`).send({
+        productId,
+        quantity: 2,
+      });
 
       // Add same item again
       const response = await request(app)
@@ -213,5 +210,3 @@ describe('Cart Module', () => {
     });
   });
 });
-
-

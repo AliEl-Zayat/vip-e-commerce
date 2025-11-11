@@ -57,4 +57,3 @@ pushTokenSchema.index({ userId: 1, isActive: 1 });
 pushTokenSchema.index({ token: 1 }, { unique: true });
 
 export const PushToken = mongoose.model<IPushToken>('PushToken', pushTokenSchema);
-

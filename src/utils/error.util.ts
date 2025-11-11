@@ -49,11 +49,7 @@ export class AppError extends Error {
     return new AppError(message, ErrorCode.Conflict, 409, details);
   }
 
-  static validationError(
-    message: string,
-    details?: Record<string, unknown>
-  ): AppError {
+  static validationError(message: string, details?: Record<string, unknown>): AppError {
     return new AppError(message, ErrorCode.ValidationError, 400, details);
   }
 }
-

@@ -25,4 +25,3 @@ export type CreateWishlistDto = z.infer<typeof createWishlistSchema>;
 export type UpdateWishlistDto = z.infer<typeof updateWishlistSchema>;
 export type AddItemToWishlistDto = z.infer<typeof addItemToWishlistSchema>;
 export type UpdateWishlistItemDto = z.infer<typeof updateWishlistItemSchema>;
-

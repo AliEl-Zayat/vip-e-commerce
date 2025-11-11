@@ -193,4 +193,3 @@ router.post('/coupon', cartController.applyCoupon.bind(cartController));
 router.delete('/coupon', cartController.removeCoupon.bind(cartController));
 
 export default router;
-

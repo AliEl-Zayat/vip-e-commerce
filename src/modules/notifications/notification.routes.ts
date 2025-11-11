@@ -35,7 +35,11 @@ const router: Router = Router();
  *       200:
  *         description: Notifications retrieved successfully
  */
-router.get('/', authMiddleware, notificationController.getUserNotifications.bind(notificationController));
+router.get(
+  '/',
+  authMiddleware,
+  notificationController.getUserNotifications.bind(notificationController)
+);
 
 /**
  * @swagger
@@ -49,7 +53,11 @@ router.get('/', authMiddleware, notificationController.getUserNotifications.bind
  *       200:
  *         description: Unread count retrieved successfully
  */
-router.get('/unread-count', authMiddleware, notificationController.getUnreadCount.bind(notificationController));
+router.get(
+  '/unread-count',
+  authMiddleware,
+  notificationController.getUnreadCount.bind(notificationController)
+);
 
 /**
  * @swagger
@@ -69,7 +77,11 @@ router.get('/unread-count', authMiddleware, notificationController.getUnreadCoun
  *       200:
  *         description: Notification marked as read
  */
-router.patch('/:id/read', authMiddleware, notificationController.markAsRead.bind(notificationController));
+router.patch(
+  '/:id/read',
+  authMiddleware,
+  notificationController.markAsRead.bind(notificationController)
+);
 
 /**
  * @swagger
@@ -171,4 +183,3 @@ router.delete('/:id', authMiddleware, notificationController.delete.bind(notific
 router.delete('/', authMiddleware, notificationController.deleteAll.bind(notificationController));
 
 export default router;
-

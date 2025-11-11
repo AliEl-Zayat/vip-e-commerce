@@ -13,7 +13,15 @@ export const createOrderSchema = z.object({
 });
 
 export const updateOrderStatusSchema = z.object({
-  status: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']),
+  status: z.enum([
+    'pending',
+    'confirmed',
+    'processing',
+    'shipped',
+    'delivered',
+    'cancelled',
+    'refunded',
+  ]),
 });
 
 export const updateShippingInfoSchema = z.object({
@@ -25,5 +33,3 @@ export const updateShippingInfoSchema = z.object({
 export type CreateOrderDto = z.infer<typeof createOrderSchema>;
 export type UpdateOrderStatusDto = z.infer<typeof updateOrderStatusSchema>;
 export type UpdateShippingInfoDto = z.infer<typeof updateShippingInfoSchema>;
-
-

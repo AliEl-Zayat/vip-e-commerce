@@ -38,7 +38,12 @@ const router: Router = Router();
  *       201:
  *         description: Wishlist created successfully
  */
-router.post('/', authMiddleware, validate(createWishlistSchema), wishlistController.create.bind(wishlistController));
+router.post(
+  '/',
+  authMiddleware,
+  validate(createWishlistSchema),
+  wishlistController.create.bind(wishlistController)
+);
 
 /**
  * @swagger
@@ -134,7 +139,12 @@ router.get('/:id', wishlistController.getWishlistById.bind(wishlistController));
  *       200:
  *         description: Wishlist updated successfully
  */
-router.patch('/:id', authMiddleware, validate(updateWishlistSchema), wishlistController.update.bind(wishlistController));
+router.patch(
+  '/:id',
+  authMiddleware,
+  validate(updateWishlistSchema),
+  wishlistController.update.bind(wishlistController)
+);
 
 /**
  * @swagger
@@ -217,7 +227,11 @@ router.post(
  *       200:
  *         description: Item removed from wishlist
  */
-router.delete('/:id/items/:productId', authMiddleware, wishlistController.removeItem.bind(wishlistController));
+router.delete(
+  '/:id/items/:productId',
+  authMiddleware,
+  wishlistController.removeItem.bind(wishlistController)
+);
 
 /**
  * @swagger
@@ -258,4 +272,3 @@ router.patch(
 );
 
 export default router;
-

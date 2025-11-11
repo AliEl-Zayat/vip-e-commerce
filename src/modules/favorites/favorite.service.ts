@@ -5,6 +5,7 @@ import { Product } from '../products/product.model';
 import { userBehaviorService } from '../user-behavior/user-behavior.service';
 import { AppError } from '../../utils/error.util';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
+import { FavoriteDto, PopulatedFavoriteDocument, mapFavoriteToDto } from './favorite.types';
 
 export class FavoriteService {
   async add(userId: string, data: CreateFavoriteDto): Promise<IFavorite> {
@@ -39,7 +40,7 @@ export class FavoriteService {
           tags: product.tags,
         },
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('[FavoriteService] Error tracking favorite add:', err);
       });
 
@@ -57,7 +58,11 @@ export class FavoriteService {
     }
   }
 
-  async getUserFavorites(userId: string, page?: number, limit?: number) {
+  async getUserFavorites(
+    userId: string,
+    page?: number,
+    limit?: number
+  ): Promise<{ favorites: FavoriteDto[]; meta: ReturnType<typeof buildPaginationMeta> }> {
     const { skip, limit: queryLimit } = parsePagination({ page, limit });
 
     const [favorites, totalItems] = await Promise.all([
@@ -71,7 +76,9 @@ export class FavoriteService {
 
     const meta = buildPaginationMeta(page || 1, queryLimit, totalItems);
 
-    return { favorites, meta };
+    const favoriteDtos = (favorites as PopulatedFavoriteDocument[]).map(mapFavoriteToDto);
+
+    return { favorites: favoriteDtos, meta };
   }
 
   async isFavorite(userId: string, productId: string): Promise<boolean> {
@@ -89,4 +96,3 @@ export class FavoriteService {
 }
 
 export const favoriteService = new FavoriteService();
-

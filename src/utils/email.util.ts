@@ -6,7 +6,7 @@ const createTransporter = () => {
   // For development, use console logging
   if (config.nodeEnv === 'development' && !process.env.SMTP_HOST) {
     return {
-      sendMail: async (options: any) => {
+      sendMail: async (options: EmailOptions) => {
         console.log('📧 Email (Development Mode):');
         console.log('To:', options.to);
         console.log('Subject:', options.subject);
@@ -59,7 +59,7 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
 
 export const sendPasswordResetEmail = async (email: string, resetToken: string): Promise<void> => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -140,5 +140,3 @@ export const sendOTPEmail = async (email: string, otpCode: string): Promise<void
     html,
   });
 };
-
-

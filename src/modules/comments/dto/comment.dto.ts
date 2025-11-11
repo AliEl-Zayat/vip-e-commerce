@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 export const createCommentSchema = z.object({
   productId: z.string().min(1, 'Product ID is required'),
-  content: z.string().min(1, 'Content is required').max(5000, 'Content must be less than 5000 characters'),
+  content: z
+    .string()
+    .min(1, 'Content is required')
+    .max(5000, 'Content must be less than 5000 characters'),
   parentId: z.string().optional(), // For replies
 });
 
@@ -18,4 +21,3 @@ export const moderateCommentSchema = z.object({
 export type CreateCommentDto = z.infer<typeof createCommentSchema>;
 export type UpdateCommentDto = z.infer<typeof updateCommentSchema>;
 export type ModerateCommentDto = z.infer<typeof moderateCommentSchema>;
-

@@ -2,6 +2,22 @@ import { Request, Response, NextFunction } from 'express';
 import { categoryService } from './category.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { success } from '../../utils/response.util';
+import { ICategory } from './category.model';
+import { CategoryParent, extractParentSummary, mapCategoryResponse } from './category.types';
+
+export const transformCategory = (category: ICategory) => ({
+  id: category._id.toString(),
+  name: category.name,
+  slug: category.slug,
+  description: category.description,
+  parentId: extractParentSummary(category.parentId as CategoryParent)?.id ?? undefined,
+  image: category.image,
+  isActive: category.isActive,
+  order: category.order,
+  productCount: category.productCount,
+  createdAt: category.createdAt,
+  updatedAt: category.updatedAt,
+});
 
 export class CategoryController {
   async createCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -9,22 +25,7 @@ export class CategoryController {
       const data = req.body as CreateCategoryDto;
       const category = await categoryService.createCategory(data);
 
-      success(
-        res,
-        {
-          id: category._id.toString(),
-          name: category.name,
-          slug: category.slug,
-          description: category.description,
-          parentId: category.parentId?.toString(),
-          image: category.image,
-          isActive: category.isActive,
-          order: category.order,
-          createdAt: category.createdAt,
-          updatedAt: category.updatedAt,
-        },
-        201
-      );
+      success(res, mapCategoryResponse(category), 201);
     } catch (err) {
       next(err);
     }
@@ -35,25 +36,7 @@ export class CategoryController {
       const includeProductCount = req.query.includeProductCount === 'true';
       const category = await categoryService.getCategoryById(req.params.id, includeProductCount);
 
-      success(res, {
-        id: category._id.toString(),
-        name: category.name,
-        slug: category.slug,
-        description: category.description,
-        parentId: category.parentId
-          ? {
-              id: (category.parentId as any)._id?.toString() || category.parentId.toString(),
-              name: (category.parentId as any).name,
-              slug: (category.parentId as any).slug,
-            }
-          : null,
-        image: category.image,
-        isActive: category.isActive,
-        order: category.order,
-        productCount: (category as any).productCount,
-        createdAt: category.createdAt,
-        updatedAt: category.updatedAt,
-      });
+      success(res, mapCategoryResponse(category));
     } catch (err) {
       next(err);
     }
@@ -62,27 +45,12 @@ export class CategoryController {
   async getCategoryBySlug(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const includeProductCount = req.query.includeProductCount === 'true';
-      const category = await categoryService.getCategoryBySlug(req.params.slug, includeProductCount);
+      const category = await categoryService.getCategoryBySlug(
+        req.params.slug,
+        includeProductCount
+      );
 
-      success(res, {
-        id: category._id.toString(),
-        name: category.name,
-        slug: category.slug,
-        description: category.description,
-        parentId: category.parentId
-          ? {
-              id: (category.parentId as any)._id?.toString() || category.parentId.toString(),
-              name: (category.parentId as any).name,
-              slug: (category.parentId as any).slug,
-            }
-          : null,
-        image: category.image,
-        isActive: category.isActive,
-        order: category.order,
-        productCount: (category as any).productCount,
-        createdAt: category.createdAt,
-        updatedAt: category.updatedAt,
-      });
+      success(res, mapCategoryResponse(category));
     } catch (err) {
       next(err);
     }
@@ -103,25 +71,7 @@ export class CategoryController {
 
       success(
         res,
-        categories.map((category) => ({
-          id: category._id.toString(),
-          name: category.name,
-          slug: category.slug,
-          description: category.description,
-          parentId: category.parentId
-            ? {
-                id: (category.parentId as any)._id?.toString() || category.parentId.toString(),
-                name: (category.parentId as any).name,
-                slug: (category.parentId as any).slug,
-              }
-            : null,
-          image: category.image,
-          isActive: category.isActive,
-          order: category.order,
-          productCount: (category as any).productCount,
-          createdAt: category.createdAt,
-          updatedAt: category.updatedAt,
-        })),
+        categories.map(mapCategoryResponse),
         200,
         meta as unknown as Record<string, unknown>
       );
@@ -135,28 +85,7 @@ export class CategoryController {
       const includeProductCount = req.query.includeProductCount === 'true';
       const tree = await categoryService.getCategoryTree(includeProductCount);
 
-      const formatCategory = (cat: any): any => ({
-        id: cat._id.toString(),
-        name: cat.name,
-        slug: cat.slug,
-        description: cat.description,
-        parentId: cat.parentId
-          ? {
-              id: cat.parentId._id?.toString() || cat.parentId.toString(),
-              name: cat.parentId.name,
-              slug: cat.parentId.slug,
-            }
-          : null,
-        image: cat.image,
-        isActive: cat.isActive,
-        order: cat.order,
-        productCount: cat.productCount,
-        children: cat.children ? cat.children.map(formatCategory) : [],
-        createdAt: cat.createdAt,
-        updatedAt: cat.updatedAt,
-      });
-
-      success(res, tree.map(formatCategory), 200);
+      success(res, tree, 200);
     } catch (err) {
       next(err);
     }
@@ -166,33 +95,7 @@ export class CategoryController {
     try {
       const category = await categoryService.getCategoryWithChildren(req.params.id);
 
-      success(res, {
-        id: category._id.toString(),
-        name: category.name,
-        slug: category.slug,
-        description: category.description,
-        parentId: category.parentId
-          ? {
-              id: (category.parentId as any)._id?.toString() || category.parentId.toString(),
-              name: (category.parentId as any).name,
-              slug: (category.parentId as any).slug,
-            }
-          : null,
-        image: category.image,
-        isActive: category.isActive,
-        order: category.order,
-        children: category.children?.map((child: any) => ({
-          id: child._id.toString(),
-          name: child.name,
-          slug: child.slug,
-          description: child.description,
-          image: child.image,
-          isActive: child.isActive,
-          order: child.order,
-        })),
-        createdAt: category.createdAt,
-        updatedAt: category.updatedAt,
-      });
+      success(res, category);
     } catch (err) {
       next(err);
     }
@@ -203,18 +106,7 @@ export class CategoryController {
       const data = req.body as UpdateCategoryDto;
       const category = await categoryService.updateCategory(req.params.id, data);
 
-      success(res, {
-        id: category._id.toString(),
-        name: category.name,
-        slug: category.slug,
-        description: category.description,
-        parentId: category.parentId?.toString(),
-        image: category.image,
-        isActive: category.isActive,
-        order: category.order,
-        createdAt: category.createdAt,
-        updatedAt: category.updatedAt,
-      });
+      success(res, mapCategoryResponse(category));
     } catch (err) {
       next(err);
     }
@@ -224,7 +116,7 @@ export class CategoryController {
     try {
       await categoryService.deleteCategory(req.params.id);
 
-      success(res, { message: 'Category deleted successfully' }, 200);
+      success(res, { message: 'Category deleted successfully' });
     } catch (err) {
       next(err);
     }
@@ -232,5 +124,3 @@ export class CategoryController {
 }
 
 export const categoryController = new CategoryController();
-
-

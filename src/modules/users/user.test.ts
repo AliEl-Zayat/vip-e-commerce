@@ -45,9 +45,7 @@ describe('User Profile Module', () => {
     });
 
     it('should reject request without token', async () => {
-      const response = await request(app)
-        .get('/api/v1/profile')
-        .expect(401);
+      const response = await request(app).get('/api/v1/profile').expect(401);
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('Unauthorized');
@@ -107,4 +105,3 @@ describe('User Profile Module', () => {
     });
   });
 });
-

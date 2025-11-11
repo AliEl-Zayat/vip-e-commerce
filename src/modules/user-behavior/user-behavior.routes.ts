@@ -80,4 +80,3 @@ router.get('/stats', authMiddleware, userBehaviorController.getStats);
 router.get('/', authMiddleware, userBehaviorController.getUserBehavior);
 
 export default router;
-

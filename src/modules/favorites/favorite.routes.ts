@@ -29,7 +29,12 @@ const router: Router = Router();
  *       201:
  *         description: Product added to favorites
  */
-router.post('/', authMiddleware, validate(createFavoriteSchema), favoriteController.add.bind(favoriteController));
+router.post(
+  '/',
+  authMiddleware,
+  validate(createFavoriteSchema),
+  favoriteController.add.bind(favoriteController)
+);
 
 /**
  * @swagger
@@ -72,7 +77,11 @@ router.get('/', authMiddleware, favoriteController.getUserFavorites.bind(favorit
  *       200:
  *         description: Product removed from favorites
  */
-router.delete('/products/:productId', authMiddleware, favoriteController.remove.bind(favoriteController));
+router.delete(
+  '/products/:productId',
+  authMiddleware,
+  favoriteController.remove.bind(favoriteController)
+);
 
 /**
  * @swagger
@@ -92,7 +101,10 @@ router.delete('/products/:productId', authMiddleware, favoriteController.remove.
  *       200:
  *         description: Favorite status retrieved
  */
-router.get('/products/:productId/check', authMiddleware, favoriteController.checkFavorite.bind(favoriteController));
+router.get(
+  '/products/:productId/check',
+  authMiddleware,
+  favoriteController.checkFavorite.bind(favoriteController)
+);
 
 export default router;
-

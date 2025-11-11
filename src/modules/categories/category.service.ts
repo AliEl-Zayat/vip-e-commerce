@@ -4,6 +4,12 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 import { AppError } from '../../utils/error.util';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
 import { Product } from '../products/product.model';
+import {
+  CategoryTreeNode,
+  CategoryParent,
+  extractParentSummary,
+  mapCategoryResponse,
+} from './category.types';
 
 export interface CategoryListQuery {
   page?: number;
@@ -57,7 +63,7 @@ export class CategoryService {
 
     if (includeProductCount) {
       const productCount = await Product.countDocuments({ category: category.name });
-      (category as any).productCount = productCount;
+      category.set('productCount', productCount, { strict: false });
     }
 
     return category;
@@ -71,7 +77,7 @@ export class CategoryService {
 
     if (includeProductCount) {
       const productCount = await Product.countDocuments({ category: category.name });
-      (category as any).productCount = productCount;
+      category.set('productCount', productCount, { strict: false });
     }
 
     return category;
@@ -107,7 +113,7 @@ export class CategoryService {
     if (query.includeProductCount) {
       for (const category of categories) {
         const productCount = await Product.countDocuments({ category: category.name });
-        (category as any).productCount = productCount;
+        category.set('productCount', productCount, { strict: false });
       }
     }
 
@@ -116,7 +122,7 @@ export class CategoryService {
     return { categories, meta };
   }
 
-  async getCategoryTree(includeProductCount = false): Promise<ICategory[]> {
+  async getCategoryTree(includeProductCount = false): Promise<CategoryTreeNode[]> {
     // Get all categories
     const allCategories = await Category.find({ isActive: true })
       .populate('parentId', 'name slug')
@@ -126,37 +132,43 @@ export class CategoryService {
     if (includeProductCount) {
       for (const category of allCategories) {
         const productCount = await Product.countDocuments({ category: category.name });
-        (category as any).productCount = productCount;
+        category.set('productCount', productCount, { strict: false });
       }
     }
 
-    // Build tree structure
-    const categoryMap = new Map<string, any & { children?: any[] }>();
-    const rootCategories: any[] = [];
+    const nodeMap = new Map<string, CategoryTreeNode>();
+    const roots: CategoryTreeNode[] = [];
 
-    // First pass: create map of all categories
-    allCategories.forEach((category) => {
-      categoryMap.set(category._id.toString(), { ...category.toObject(), children: [] });
+    const createNode = (category: ICategory): CategoryTreeNode => ({
+      ...mapCategoryResponse(category),
+      children: [],
     });
 
-    // Second pass: build tree
-    allCategories.forEach((category) => {
-      const categoryObj = categoryMap.get(category._id.toString())!;
-      if (category.parentId) {
-        const parent = categoryMap.get(category.parentId.toString());
-        if (parent) {
-          parent.children = parent.children || [];
-          parent.children.push(categoryObj);
-        } else {
-          // Parent not found or inactive, treat as root
-          rootCategories.push(categoryObj);
-        }
-      } else {
-        rootCategories.push(categoryObj);
+    allCategories.forEach(category => {
+      nodeMap.set(category._id.toString(), createNode(category));
+    });
+
+    allCategories.forEach(category => {
+      const currentNode = nodeMap.get(category._id.toString());
+      if (!currentNode) {
+        return;
       }
+
+      const parentSummary = extractParentSummary(category.parentId as CategoryParent);
+      const parentId = parentSummary?.id;
+
+      if (parentId) {
+        const parentNode = nodeMap.get(parentId);
+        if (parentNode) {
+          parentNode.children.push(currentNode);
+          return;
+        }
+      }
+
+      roots.push(currentNode);
     });
 
-    return rootCategories;
+    return roots;
   }
 
   async updateCategory(id: string, data: UpdateCategoryDto): Promise<ICategory> {
@@ -212,7 +224,11 @@ export class CategoryService {
           : new mongoose.Types.ObjectId(data.parentId);
     }
 
-    const updatedCategory = await Category.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+    const updatedCategory = await Category.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true }
+    );
 
     if (!updatedCategory) {
       throw AppError.notFound('Category not found');
@@ -242,7 +258,7 @@ export class CategoryService {
     await Category.findByIdAndDelete(id);
   }
 
-  async getCategoryWithChildren(id: string): Promise<any> {
+  async getCategoryWithChildren(id: string): Promise<CategoryTreeNode> {
     const category = await Category.findById(id).populate('parentId', 'name slug');
     if (!category) {
       throw AppError.notFound('Category not found');
@@ -252,10 +268,16 @@ export class CategoryService {
       .populate('parentId', 'name slug')
       .sort({ order: 1, name: 1 });
 
-    return { ...category.toObject(), children: children.map(c => c.toObject()) };
+    const parentNode: CategoryTreeNode = {
+      ...mapCategoryResponse(category),
+      children: children.map(child => ({
+        ...mapCategoryResponse(child),
+        children: [],
+      })),
+    };
+
+    return parentNode;
   }
 }
 
 export const categoryService = new CategoryService();
-
-

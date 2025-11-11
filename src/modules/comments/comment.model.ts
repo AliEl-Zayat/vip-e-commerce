@@ -74,4 +74,3 @@ commentSchema.index({ parentId: 1 });
 commentSchema.index({ userId: 1 });
 
 export const Comment = mongoose.model<IComment>('Comment', commentSchema);
-

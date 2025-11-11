@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { favoriteService } from './favorite.service';
 import { CreateFavoriteDto } from './dto/favorite.dto';
 import { success } from '../../utils/response.util';
+import type { FavoriteDto } from './favorite.types';
 
 export class FavoriteController {
   async add(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -49,26 +50,13 @@ export class FavoriteController {
       const page = req.query.page ? parseInt(String(req.query.page), 10) : undefined;
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
 
-      const { favorites, meta } = await favoriteService.getUserFavorites(req.user._id.toString(), page, limit);
-
-      success(
-        res,
-        favorites.map((f: any) => ({
-          id: f._id.toString(),
-          product: f.productId
-            ? {
-                id: f.productId._id.toString(),
-                title: f.productId.title,
-                slug: f.productId.slug,
-                price: f.productId.price,
-                images: f.productId.images,
-              }
-            : null,
-          createdAt: f.createdAt,
-        })),
-        200,
-        meta as unknown as Record<string, unknown>
+      const { favorites, meta } = await favoriteService.getUserFavorites(
+        req.user._id.toString(),
+        page,
+        limit
       );
+
+      success(res, favorites as FavoriteDto[], 200, meta as unknown as Record<string, unknown>);
     } catch (err) {
       next(err);
     }
@@ -80,7 +68,10 @@ export class FavoriteController {
         throw new Error('User not authenticated');
       }
 
-      const isFavorite = await favoriteService.isFavorite(req.user._id.toString(), req.params.productId);
+      const isFavorite = await favoriteService.isFavorite(
+        req.user._id.toString(),
+        req.params.productId
+      );
       success(res, { isFavorite });
     } catch (err) {
       next(err);
@@ -89,4 +80,3 @@ export class FavoriteController {
 }
 
 export const favoriteController = new FavoriteController();
-

@@ -42,4 +42,3 @@ export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
 export type RequestOTPDto = z.infer<typeof requestOTPSchema>;
 export type VerifyOTPDto = z.infer<typeof verifyOTPSchema>;
 export type AuthenticateQRDto = z.infer<typeof authenticateQRSchema>;
-

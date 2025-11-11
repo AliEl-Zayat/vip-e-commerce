@@ -16,7 +16,7 @@ export const connectDB = async (): Promise<void> => {
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
       serverSelectionTimeoutMS: 5000, // How long to try selecting a server
       heartbeatFrequencyMS: 10000, // How often to check server status
-      
+
       // Retry options
       retryWrites: true,
       retryReads: true,
@@ -38,7 +38,7 @@ mongoose.connection.on('disconnected', () => {
   logger.warn('MongoDB disconnected');
 });
 
-mongoose.connection.on('error', (error) => {
+mongoose.connection.on('error', error => {
   logger.error('MongoDB error:', error);
 });
 
@@ -61,4 +61,3 @@ const gracefulShutdown = async (signal: string): Promise<void> => {
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-

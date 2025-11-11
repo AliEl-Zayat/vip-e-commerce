@@ -11,5 +11,3 @@ export const updateCartItemSchema = z.object({
 
 export type AddToCartDto = z.infer<typeof addToCartSchema>;
 export type UpdateCartItemDto = z.infer<typeof updateCartItemSchema>;
-
-

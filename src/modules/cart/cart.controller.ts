@@ -3,29 +3,38 @@ import { cartService } from './cart.service';
 import { AddToCartDto, UpdateCartItemDto } from './dto/cart.dto';
 import { success } from '../../utils/response.util';
 import { offerService } from '../offers/offer.service';
+import type { PopulatedCartDocument, CartItemWithProduct } from './cart.types';
+import { isCartItemWithProduct } from './cart.types';
+import type { OfferApplicationResult } from '../offers/offer.service';
+import { ICartItem } from './cart.model';
 
 export class CartController {
-  private async calculateCartTotals(cart: any) {
-    const subtotal = cart.items.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+  private async calculateCartTotals(cart: PopulatedCartDocument): Promise<{
+    subtotal: number;
+    couponDiscount: number;
+    offerDiscount: number;
+    totalDiscount: number;
+    total: number;
+    freeShipping: boolean;
+    applicableOffers: OfferApplicationResult['applicableOffers'];
+  }> {
+    const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    // Prepare cart items for offer calculation
-    const cartItems = cart.items.map((item: any) => {
-      const product = item.productId;
+    const cartItemsForOffers = cart.items.map((item: CartItemWithProduct | ICartItem) => {
+      const product = isCartItemWithProduct(item)
+        ? item.productId
+        : (item as unknown as ICartItem).productId;
+
       return {
-        productId: product._id?.toString() || product.toString(),
+        productId: product._id.toString(),
         quantity: item.quantity,
         price: item.price,
-        category: product.category || undefined,
+        category: product.category,
       };
     });
 
-    // Apply offers automatically
-    const offerResult = await offerService.applyOffersToCart(cartItems, subtotal);
-
-    // Calculate coupon discount
+    const offerResult = await offerService.applyOffersToCart(cartItemsForOffers, subtotal);
     const couponDiscount = cart.discountAmount || 0;
-
-    // Total discount is sum of offer discounts and coupon discount
     const totalDiscount = offerResult.totalDiscount + couponDiscount;
     const total = subtotal - totalDiscount;
 
@@ -36,12 +45,7 @@ export class CartController {
       totalDiscount,
       total,
       freeShipping: offerResult.freeShipping,
-      applicableOffers: offerResult.applicableOffers.map((ao) => ({
-        offerId: ao.offer._id.toString(),
-        title: ao.offer.title,
-        description: ao.description,
-        discountAmount: ao.discountAmount,
-      })),
+      applicableOffers: offerResult.applicableOffers,
     };
   }
 
@@ -57,8 +61,10 @@ export class CartController {
       success(res, {
         id: cart._id.toString(),
         userId: cart.userId.toString(),
-        items: cart.items.map((item) => ({
-          productId: item.productId,
+        items: cart.items.map(item => ({
+          productId: isCartItemWithProduct(item)
+            ? item.productId._id.toString()
+            : (item as unknown as ICartItem).productId.toString(),
           quantity: item.quantity,
           price: item.price,
         })),
@@ -92,8 +98,10 @@ export class CartController {
       success(res, {
         id: cart._id.toString(),
         userId: cart.userId.toString(),
-        items: cart.items.map((item) => ({
-          productId: item.productId,
+        items: cart.items.map(item => ({
+          productId: isCartItemWithProduct(item)
+            ? item.productId._id.toString()
+            : (item as unknown as ICartItem).productId.toString(),
           quantity: item.quantity,
           price: item.price,
         })),
@@ -129,8 +137,10 @@ export class CartController {
       success(res, {
         id: cart._id.toString(),
         userId: cart.userId.toString(),
-        items: cart.items.map((item) => ({
-          productId: item.productId,
+        items: cart.items.map(item => ({
+          productId: isCartItemWithProduct(item)
+            ? item.productId._id.toString()
+            : (item as unknown as ICartItem).productId.toString(),
           quantity: item.quantity,
           price: item.price,
         })),
@@ -161,8 +171,10 @@ export class CartController {
       success(res, {
         id: cart._id.toString(),
         userId: cart.userId.toString(),
-        items: cart.items.map((item) => ({
-          productId: item.productId,
+        items: cart.items.map(item => ({
+          productId: isCartItemWithProduct(item)
+            ? item.productId._id.toString()
+            : (item as unknown as ICartItem).productId.toString(),
           quantity: item.quantity,
           price: item.price,
         })),
@@ -208,8 +220,10 @@ export class CartController {
       success(res, {
         id: cart._id.toString(),
         userId: cart.userId.toString(),
-        items: cart.items.map((item) => ({
-          productId: item.productId,
+        items: cart.items.map(item => ({
+          productId: isCartItemWithProduct(item)
+            ? item.productId._id.toString()
+            : (item as unknown as ICartItem).productId.toString(),
           quantity: item.quantity,
           price: item.price,
         })),
@@ -240,13 +254,15 @@ export class CartController {
       success(res, {
         id: cart._id.toString(),
         userId: cart.userId.toString(),
-        items: cart.items.map((item) => ({
-          productId: item.productId,
+        items: cart.items.map(item => ({
+          productId: isCartItemWithProduct(item)
+            ? item.productId._id.toString()
+            : (item as unknown as ICartItem).productId._id.toString(),
           quantity: item.quantity,
           price: item.price,
         })),
-        couponCode: undefined,
-        couponDiscount: 0,
+        couponCode: cart.couponCode,
+        couponDiscount: totals.couponDiscount,
         offerDiscount: totals.offerDiscount,
         applicableOffers: totals.applicableOffers,
         discountAmount: totals.totalDiscount,
@@ -262,4 +278,3 @@ export class CartController {
 }
 
 export const cartController = new CartController();
-

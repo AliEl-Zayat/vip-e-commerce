@@ -9,7 +9,7 @@ import { asyncHandler } from '../../utils/async-handler.util';
 import { IProduct } from './product.model';
 
 // Pure function: Transform product to response format
-const transformProduct = (product: IProduct) => ({
+export const transformProduct = (product: IProduct) => ({
   id: product._id.toString(),
   title: product.title,
   slug: product.slug,
@@ -57,12 +57,7 @@ export const list = asyncHandler(async (req: Request, res: Response): Promise<vo
 
   const { products, meta } = await productService.list(query);
 
-  success(
-    res,
-    products.map(transformProduct),
-    200,
-    meta as unknown as Record<string, unknown>
-  );
+  success(res, products.map(transformProduct), 200, meta as unknown as Record<string, unknown>);
 });
 
 export const update = asyncHandler(async (req: Request, res: Response): Promise<void> => {

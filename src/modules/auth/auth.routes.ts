@@ -173,11 +173,7 @@ router.post('/logout', authController.logout);
  *       200:
  *         description: Password reset email sent (if email exists)
  */
-router.post(
-  '/forget-password',
-  validate(forgetPasswordSchema),
-  authController.forgetPassword
-);
+router.post('/forget-password', validate(forgetPasswordSchema), authController.forgetPassword);
 
 /**
  * @swagger
@@ -208,11 +204,7 @@ router.post(
  *       400:
  *         description: Invalid or expired token
  */
-router.post(
-  '/reset-password',
-  validate(resetPasswordSchema),
-  authController.resetPassword
-);
+router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
 
 /**
  * @swagger
@@ -237,11 +229,7 @@ router.post(
  *       200:
  *         description: OTP code sent (if email exists)
  */
-router.post(
-  '/otp/request',
-  validate(requestOTPSchema),
-  authController.requestOTP
-);
+router.post('/otp/request', validate(requestOTPSchema), authController.requestOTP);
 
 /**
  * @swagger
@@ -277,11 +265,7 @@ router.post(
  *       401:
  *         description: Invalid or expired OTP
  */
-router.post(
-  '/otp/verify',
-  validate(verifyOTPSchema),
-  authController.verifyOTP
-);
+router.post('/otp/verify', validate(verifyOTPSchema), authController.verifyOTP);
 
 /**
  * @swagger
@@ -415,4 +399,3 @@ router.post(
 );
 
 export default router;
-

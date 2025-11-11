@@ -54,7 +54,7 @@ export class PushNotificationController {
 
       success(
         res,
-        tokens.map((token) => ({
+        tokens.map(token => ({
           id: token._id.toString(),
           platform: token.platform,
           deviceId: token.deviceId,
@@ -84,4 +84,3 @@ export class PushNotificationController {
 }
 
 export const pushNotificationController = new PushNotificationController();
-

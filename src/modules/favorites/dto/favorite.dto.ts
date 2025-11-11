@@ -5,4 +5,3 @@ export const createFavoriteSchema = z.object({
 });
 
 export type CreateFavoriteDto = z.infer<typeof createFavoriteSchema>;
-

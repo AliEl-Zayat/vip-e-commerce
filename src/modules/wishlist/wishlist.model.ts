@@ -67,4 +67,3 @@ wishlistSchema.index({ userId: 1, createdAt: -1 });
 wishlistSchema.index({ isPublic: 1, createdAt: -1 });
 
 export const Wishlist = mongoose.model<IWishlist>('Wishlist', wishlistSchema);
-

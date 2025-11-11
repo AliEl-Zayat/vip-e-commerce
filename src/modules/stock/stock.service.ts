@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Product } from '../products/product.model';
+import { IProduct, Product } from '../products/product.model';
 import { StockHistory, StockAlert, IStockHistory, IStockAlert } from './stock.model';
 import { UpdateStockDto, CreateStockAlertDto, UpdateStockAlertDto } from './dto/stock.dto';
 import { AppError } from '../../utils/error.util';
@@ -10,7 +10,7 @@ export class StockService {
     productId: string,
     data: UpdateStockDto,
     userId?: string
-  ): Promise<{ product: any; history: IStockHistory }> {
+  ): Promise<{ product: IProduct; history: IStockHistory }> {
     const product = await Product.findById(productId);
     if (!product) {
       throw AppError.notFound('Product not found');
@@ -151,22 +151,25 @@ export class StockService {
     return false;
   }
 
-  async getLowStockProducts(threshold?: number): Promise<any[]> {
+  async getLowStockProducts(threshold?: number): Promise<IProduct[]> {
     const filter: Record<string, unknown> = { stock: { $gt: 0 } };
-    
+
     if (threshold !== undefined) {
       filter.stock = { $lte: threshold };
     } else {
       // Get products with active alerts below threshold
       const alerts = await StockAlert.find({ isActive: true }).populate('productId');
       const productIds = alerts
-        .filter((alert: any) => alert.productId && alert.productId.stock <= alert.threshold)
-        .map((alert: any) => alert.productId._id);
-      
+        .filter(
+          (alert: IStockAlert) =>
+            alert.productId && (alert.productId as unknown as IProduct)?.stock <= alert.threshold
+        )
+        .map((alert: IStockAlert) => alert.productId._id);
+
       if (productIds.length === 0) {
         return [];
       }
-      
+
       filter._id = { $in: productIds };
     }
 
@@ -189,4 +192,3 @@ export class StockService {
 }
 
 export const stockService = new StockService();
-

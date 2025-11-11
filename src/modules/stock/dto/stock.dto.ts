@@ -19,4 +19,3 @@ export const updateStockAlertSchema = z.object({
 export type UpdateStockDto = z.infer<typeof updateStockSchema>;
 export type CreateStockAlertDto = z.infer<typeof createStockAlertSchema>;
 export type UpdateStockAlertDto = z.infer<typeof updateStockAlertSchema>;
-

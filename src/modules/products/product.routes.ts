@@ -320,12 +320,7 @@ router.patch(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete(
-  '/:id',
-  authMiddleware,
-  roleMiddleware('admin', 'seller'),
-  productController.remove
-);
+router.delete('/:id', authMiddleware, roleMiddleware('admin', 'seller'), productController.remove);
 
 /**
  * @swagger
@@ -428,4 +423,3 @@ router.post(
 );
 
 export default router;
-

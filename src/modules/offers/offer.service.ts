@@ -3,7 +3,7 @@ import { Offer, IOffer } from './offer.model';
 import { CreateOfferDto, UpdateOfferDto } from './dto/offer.dto';
 import { AppError } from '../../utils/error.util';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
-import { Product } from '../products/product.model';
+import { IProduct, Product } from '../products/product.model';
 
 export interface OfferListQuery {
   page?: number;
@@ -43,7 +43,7 @@ export class OfferService {
 
     // Validate bundle products exist
     if (data.bundleProducts && data.bundleProducts.length > 0) {
-      const bundleProductIds = data.bundleProducts.map((bp) => bp.productId);
+      const bundleProductIds = data.bundleProducts.map(bp => bp.productId);
       const products = await Product.find({
         _id: { $in: bundleProductIds },
       });
@@ -74,11 +74,13 @@ export class OfferService {
     }
 
     if (data.applicableProducts) {
-      offerData.applicableProducts = data.applicableProducts.map((id) => new mongoose.Types.ObjectId(id));
+      offerData.applicableProducts = data.applicableProducts.map(
+        id => new mongoose.Types.ObjectId(id)
+      );
     }
 
     if (data.bundleProducts) {
-      offerData.bundleProducts = data.bundleProducts.map((bp) => ({
+      offerData.bundleProducts = data.bundleProducts.map(bp => ({
         productId: new mongoose.Types.ObjectId(bp.productId),
         quantity: bp.quantity,
       }));
@@ -182,7 +184,7 @@ export class OfferService {
 
     // Validate bundle products if updating
     if (data.bundleProducts) {
-      const bundleProductIds = data.bundleProducts.map((bp) => bp.productId);
+      const bundleProductIds = data.bundleProducts.map(bp => bp.productId);
       const products = await Product.find({
         _id: { $in: bundleProductIds },
       });
@@ -206,11 +208,13 @@ export class OfferService {
     }
 
     if (data.applicableProducts) {
-      updateData.applicableProducts = data.applicableProducts.map((id) => new mongoose.Types.ObjectId(id));
+      updateData.applicableProducts = data.applicableProducts.map(
+        id => new mongoose.Types.ObjectId(id)
+      );
     }
 
     if (data.bundleProducts) {
-      updateData.bundleProducts = data.bundleProducts.map((bp) => ({
+      updateData.bundleProducts = data.bundleProducts.map(bp => ({
         productId: new mongoose.Types.ObjectId(bp.productId),
         quantity: bp.quantity,
       }));
@@ -261,13 +265,13 @@ export class OfferService {
     let freeShipping = false;
 
     const productMap = new Map(
-      cartItems.map((item) => [item.productId, { ...item, product: null as any }])
+      cartItems.map(item => [item.productId, { ...item, product: null as unknown as IProduct }])
     );
 
     // Fetch product details for cart items
-    const productIds = cartItems.map((item) => item.productId);
+    const productIds = cartItems.map(item => item.productId);
     const products = await Product.find({ _id: { $in: productIds } });
-    products.forEach((product) => {
+    products.forEach(product => {
       const item = productMap.get(product._id.toString());
       if (item) {
         item.product = product;
@@ -295,12 +299,19 @@ export class OfferService {
 
           // Check if products match
           if (offer.applicableProducts && offer.applicableProducts.length > 0) {
-            const applicableProductIds = offer.applicableProducts.map((p: any) => p._id.toString());
-            const matchingItems = cartItems.filter((item) => applicableProductIds.includes(item.productId));
+            const applicableProductIds = offer.applicableProducts.map(
+              (p: mongoose.Types.ObjectId) => p.toString()
+            );
+            const matchingItems = cartItems.filter(item =>
+              applicableProductIds.includes(item.productId)
+            );
 
             if (matchingItems.length > 0) {
               applicable = true;
-              const matchingTotal = matchingItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+              const matchingTotal = matchingItems.reduce(
+                (sum, item) => sum + item.price * item.quantity,
+                0
+              );
               discountAmount = this.calculateDiscount(matchingTotal, offer);
               description = `Flash Sale: ${offer.title}`;
             }
@@ -309,14 +320,17 @@ export class OfferService {
 
         case 'category_discount':
           if (offer.applicableCategories && offer.applicableCategories.length > 0) {
-            const matchingItems = cartItems.filter((item) => {
-              const product = products.find((p) => p._id.toString() === item.productId);
+            const matchingItems = cartItems.filter(item => {
+              const product = products.find(p => p._id.toString() === item.productId);
               return product && offer.applicableCategories!.includes(product.category);
             });
 
             if (matchingItems.length > 0) {
               applicable = true;
-              const matchingTotal = matchingItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+              const matchingTotal = matchingItems.reduce(
+                (sum, item) => sum + item.price * item.quantity,
+                0
+              );
               discountAmount = this.calculateDiscount(matchingTotal, offer);
               description = `Category Discount: ${offer.title}`;
             }
@@ -325,12 +339,19 @@ export class OfferService {
 
         case 'product_discount':
           if (offer.applicableProducts && offer.applicableProducts.length > 0) {
-            const applicableProductIds = offer.applicableProducts.map((p: any) => p._id.toString());
-            const matchingItems = cartItems.filter((item) => applicableProductIds.includes(item.productId));
+            const applicableProductIds = offer.applicableProducts.map(
+              (p: mongoose.Types.ObjectId) => p.toString()
+            );
+            const matchingItems = cartItems.filter(item =>
+              applicableProductIds.includes(item.productId)
+            );
 
             if (matchingItems.length > 0) {
               applicable = true;
-              const matchingTotal = matchingItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+              const matchingTotal = matchingItems.reduce(
+                (sum, item) => sum + item.price * item.quantity,
+                0
+              );
               discountAmount = this.calculateDiscount(matchingTotal, offer);
               description = `Product Discount: ${offer.title}`;
             }
@@ -339,12 +360,15 @@ export class OfferService {
 
         case 'bogo':
           if (offer.bogoProductId && offer.bogoBuyQuantity && offer.bogoGetQuantity) {
-            const bogoProductId = (offer.bogoProductId as any)._id?.toString() || offer.bogoProductId.toString();
-            const cartItem = cartItems.find((item) => item.productId === bogoProductId);
+            const bogoProductId =
+              (offer.bogoProductId as unknown as mongoose.Types.ObjectId)._id?.toString() ||
+              offer.bogoProductId.toString();
+            const cartItem = cartItems.find(item => item.productId === bogoProductId);
 
             if (cartItem && cartItem.quantity >= offer.bogoBuyQuantity) {
               applicable = true;
-              const freeQuantity = Math.floor(cartItem.quantity / offer.bogoBuyQuantity) * offer.bogoGetQuantity;
+              const freeQuantity =
+                Math.floor(cartItem.quantity / offer.bogoBuyQuantity) * offer.bogoGetQuantity;
               discountAmount = Math.min(freeQuantity, cartItem.quantity) * cartItem.price;
               description = `BOGO: Buy ${offer.bogoBuyQuantity}, Get ${offer.bogoGetQuantity} Free`;
             }
@@ -354,8 +378,9 @@ export class OfferService {
         case 'bundle':
           if (offer.bundleProducts && offer.bundleProducts.length > 0) {
             const bundleQuantities = new Map(
-              offer.bundleProducts.map((bp: any) => [
-                bp.productId._id?.toString() || bp.productId.toString(),
+              offer.bundleProducts.map(bp => [
+                (bp.productId as unknown as mongoose.Types.ObjectId)._id?.toString() ||
+                  bp.productId.toString(),
                 bp.quantity,
               ])
             );
@@ -363,7 +388,7 @@ export class OfferService {
             // Check if all bundle products are in cart with required quantities
             let hasAllProducts = true;
             for (const [productId, requiredQty] of bundleQuantities) {
-              const cartItem = cartItems.find((item) => item.productId === productId);
+              const cartItem = cartItems.find(item => item.productId === productId);
               if (!cartItem || cartItem.quantity < requiredQty) {
                 hasAllProducts = false;
                 break;
@@ -372,10 +397,13 @@ export class OfferService {
 
             if (hasAllProducts && offer.bundlePrice) {
               applicable = true;
-              const bundleTotal = Array.from(bundleQuantities.entries()).reduce((sum, [productId, qty]) => {
-                const cartItem = cartItems.find((item) => item.productId === productId);
-                return sum + (cartItem ? cartItem.price * qty : 0);
-              }, 0);
+              const bundleTotal = Array.from(bundleQuantities.entries()).reduce(
+                (sum, [productId, qty]) => {
+                  const cartItem = cartItems.find(item => item.productId === productId);
+                  return sum + (cartItem ? cartItem.price * qty : 0);
+                },
+                0
+              );
               discountAmount = bundleTotal - offer.bundlePrice;
               description = `Bundle Offer: ${offer.title}`;
             }
@@ -432,5 +460,3 @@ export class OfferService {
 }
 
 export const offerService = new OfferService();
-
-

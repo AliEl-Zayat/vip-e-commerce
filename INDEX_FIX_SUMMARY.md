@@ -1,12 +1,16 @@
 # Mongoose Index Duplicate Warnings - Fixed
 
 ## Issue
+
 Mongoose was showing duplicate index warnings because indexes were defined both:
+
 1. In field definitions using `index: true`
 2. At schema level using `schema.index()`
 
 ## Root Cause
+
 According to Mongoose best practices:
+
 - When `unique: true` is set, it automatically creates an index
 - When you explicitly call `schema.index()`, you should remove `index: true` from the field definition
 - Having both creates duplicate indexes
@@ -14,6 +18,7 @@ According to Mongoose best practices:
 ## Fixes Applied
 
 ### Models Fixed
+
 1. **User Model** - Removed `index: true` from `email` (has `unique: true` and explicit index)
 2. **Product Model** - Removed `index: true` from `slug`, `category`, `categoryId`, `sellerId`
 3. **Category Model** - Removed `index: true` from `name`, `slug`, `parentId`, `isActive`
@@ -34,6 +39,7 @@ According to Mongoose best practices:
 ## Best Practice Applied
 
 **Before:**
+
 ```typescript
 slug: {
   type: String,
@@ -45,6 +51,7 @@ schema.index({ slug: 1 }, { unique: true }); // Also creates index
 ```
 
 **After:**
+
 ```typescript
 slug: {
   type: String,
@@ -55,6 +62,7 @@ schema.index({ slug: 1 }, { unique: true }); // Explicit index for clarity
 ```
 
 Or for compound indexes:
+
 ```typescript
 category: {
   type: String,
@@ -65,16 +73,18 @@ schema.index({ category: 1, price: 1 }); // Compound index
 ```
 
 ## Result
+
 ✅ All duplicate index warnings resolved
 ✅ Indexes still properly defined at schema level
 ✅ Better code clarity with comments explaining index locations
 ✅ Follows Mongoose 8.x best practices
 
 ## Verification
+
 Run the server and verify no Mongoose warnings appear:
+
 ```bash
 pnpm dev
 ```
 
 Expected output: No `[MONGOOSE] Warning: Duplicate schema index` messages.
-

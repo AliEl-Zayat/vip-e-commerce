@@ -69,7 +69,12 @@ router.post(
  *       200:
  *         description: Jobs retrieved successfully
  */
-router.get('/jobs', authMiddleware, roleMiddleware('admin', 'seller'), scraperController.getJobs.bind(scraperController));
+router.get(
+  '/jobs',
+  authMiddleware,
+  roleMiddleware('admin', 'seller'),
+  scraperController.getJobs.bind(scraperController)
+);
 
 /**
  * @swagger
@@ -89,7 +94,12 @@ router.get('/jobs', authMiddleware, roleMiddleware('admin', 'seller'), scraperCo
  *       200:
  *         description: Job retrieved successfully
  */
-router.get('/jobs/:id', authMiddleware, roleMiddleware('admin', 'seller'), scraperController.getJobById.bind(scraperController));
+router.get(
+  '/jobs/:id',
+  authMiddleware,
+  roleMiddleware('admin', 'seller'),
+  scraperController.getJobById.bind(scraperController)
+);
 
 /**
  * @swagger
@@ -147,7 +157,12 @@ router.patch(
  *       200:
  *         description: Job deleted successfully
  */
-router.delete('/jobs/:id', authMiddleware, roleMiddleware('admin', 'seller'), scraperController.deleteJob.bind(scraperController));
+router.delete(
+  '/jobs/:id',
+  authMiddleware,
+  roleMiddleware('admin', 'seller'),
+  scraperController.deleteJob.bind(scraperController)
+);
 
 /**
  * @swagger
@@ -167,7 +182,11 @@ router.delete('/jobs/:id', authMiddleware, roleMiddleware('admin', 'seller'), sc
  *       200:
  *         description: Scraping started
  */
-router.post('/jobs/:id/run', authMiddleware, roleMiddleware('admin', 'seller'), scraperController.runScrape.bind(scraperController));
+router.post(
+  '/jobs/:id/run',
+  authMiddleware,
+  roleMiddleware('admin', 'seller'),
+  scraperController.runScrape.bind(scraperController)
+);
 
 export default router;
-

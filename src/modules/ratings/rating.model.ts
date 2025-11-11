@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { MongooseTransformReturn } from '../../types/mongoose.types';
 
 export interface IRating extends mongoose.Document {
   _id: mongoose.Types.ObjectId;
@@ -52,16 +53,16 @@ const ratingSchema = new Schema<IRating>(
     timestamps: true,
     strict: true,
     toJSON: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
       },
     },
     toObject: {
-      transform: (_doc, ret: any) => {
-        ret.id = ret._id.toString();
+      transform: (_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
         delete ret._id;
         delete ret.__v;
         return ret;
@@ -77,4 +78,3 @@ ratingSchema.index({ productId: 1, createdAt: -1 });
 ratingSchema.index({ userId: 1, createdAt: -1 });
 
 export const Rating = mongoose.model<IRating>('Rating', ratingSchema);
-

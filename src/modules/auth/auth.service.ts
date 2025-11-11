@@ -211,7 +211,11 @@ export const verifyOTP = async (data: VerifyOTPDto): Promise<AuthResponse> => {
   return createAuthResponse(user);
 };
 
-export const generateQRSession = async (): Promise<{ sessionId: string; qrToken: string; qrCodeUrl: string }> => {
+export const generateQRSession = async (): Promise<{
+  sessionId: string;
+  qrToken: string;
+  qrCodeUrl: string;
+}> => {
   // Generate unique session ID and QR token
   const sessionId = crypto.randomBytes(16).toString('hex');
   const qrToken = crypto.randomBytes(32).toString('hex');

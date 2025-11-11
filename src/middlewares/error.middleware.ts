@@ -25,10 +25,7 @@ export const errorMiddleware = (
   error(
     res,
     'InternalServerError',
-    config.nodeEnv === 'production'
-      ? 'Internal server error'
-      : err.message,
+    config.nodeEnv === 'production' ? 'Internal server error' : err.message,
     500
   );
 };
-

@@ -182,18 +182,14 @@ describe('Coupon Module', () => {
     });
 
     it('should list all coupons', async () => {
-      const response = await request(app)
-        .get('/api/v1/coupons')
-        .expect(200);
+      const response = await request(app).get('/api/v1/coupons').expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should filter by active status', async () => {
-      const response = await request(app)
-        .get('/api/v1/coupons?isActive=true')
-        .expect(200);
+      const response = await request(app).get('/api/v1/coupons?isActive=true').expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.every((c: { isActive: boolean }) => c.isActive)).toBe(true);
@@ -365,4 +361,3 @@ describe('Coupon Module', () => {
     });
   });
 });
-

@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { notificationService } from './notification.service';
 import { UpdateNotificationDto, MarkAllReadDto } from './dto/notification.dto';
 import { success } from '../../utils/response.util';
+import type { NotificationType } from './notification.model';
+import type { NotificationDto } from './notification.types';
 
 export class NotificationController {
   async getUserNotifications(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -12,31 +14,21 @@ export class NotificationController {
 
       const page = req.query.page ? parseInt(String(req.query.page), 10) : undefined;
       const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : undefined;
-      const read = req.query.read === 'true' ? true : req.query.read === 'false' ? false : undefined;
-      const type = req.query.type as string | undefined;
+      const read =
+        req.query.read === 'true' ? true : req.query.read === 'false' ? false : undefined;
+      const type = req.query.type ? (req.query.type as NotificationType) : undefined;
 
       const { notifications, meta } = await notificationService.getUserNotifications(
         req.user._id.toString(),
         page,
         limit,
         read,
-        type as any
+        type
       );
 
       success(
         res,
-        notifications.map((n) => ({
-          id: n._id.toString(),
-          type: n.type,
-          title: n.title,
-          message: n.message,
-          channels: n.channels,
-          data: n.data,
-          read: n.read,
-          readAt: n.readAt,
-          sentAt: n.sentAt,
-          createdAt: n.createdAt,
-        })),
+        notifications as NotificationDto[],
         200,
         meta as unknown as Record<string, unknown>
       );
@@ -64,7 +56,10 @@ export class NotificationController {
         throw new Error('User not authenticated');
       }
 
-      const notification = await notificationService.markAsRead(req.params.id, req.user._id.toString());
+      const notification = await notificationService.markAsRead(
+        req.params.id,
+        req.user._id.toString()
+      );
       success(res, {
         id: notification._id.toString(),
         read: notification.read,
@@ -97,7 +92,11 @@ export class NotificationController {
       }
 
       const data = req.body as UpdateNotificationDto;
-      const notification = await notificationService.update(req.params.id, req.user._id.toString(), data);
+      const notification = await notificationService.update(
+        req.params.id,
+        req.user._id.toString(),
+        data
+      );
 
       success(res, {
         id: notification._id.toString(),
@@ -128,7 +127,8 @@ export class NotificationController {
         throw new Error('User not authenticated');
       }
 
-      const read = req.query.read === 'true' ? true : req.query.read === 'false' ? false : undefined;
+      const read =
+        req.query.read === 'true' ? true : req.query.read === 'false' ? false : undefined;
       const result = await notificationService.deleteAll(req.user._id.toString(), read);
 
       success(res, { count: result.count });
@@ -139,4 +139,3 @@ export class NotificationController {
 }
 
 export const notificationController = new NotificationController();
-
