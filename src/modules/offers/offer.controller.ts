@@ -153,7 +153,7 @@ export class OfferController {
     }
   }
 
-  async getActiveOffers(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getActiveOffers(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const offers = await offerService.getActiveOffers();
 
@@ -274,4 +274,5 @@ export class OfferController {
 }
 
 export const offerController = new OfferController();
+
 

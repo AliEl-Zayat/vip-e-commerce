@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { productController } from './product.controller';
+import * as productController from './product.controller';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { roleMiddleware } from '../../middlewares/role.middleware';
 import { validate } from '../../middlewares/validation.middleware';
 import { uploadMultiple } from '../../middlewares/upload.middleware';
+import { trackProductView } from '../../middlewares/track-behavior.middleware';
 import { createProductSchema, updateProductSchema } from './dto/product.dto';
 
 const router: Router = Router();
@@ -80,7 +81,7 @@ const router: Router = Router();
  *                 meta:
  *                   $ref: '#/components/schemas/PaginationMeta'
  */
-router.get('/', productController.list.bind(productController));
+router.get('/', productController.list);
 
 /**
  * @swagger
@@ -119,7 +120,7 @@ router.get('/', productController.list.bind(productController));
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/:id', productController.getById.bind(productController));
+router.get('/:id', trackProductView, productController.getById);
 
 /**
  * @swagger
@@ -189,7 +190,7 @@ router.post(
   authMiddleware,
   roleMiddleware('admin', 'seller'),
   validate(createProductSchema),
-  productController.create.bind(productController)
+  productController.create
 );
 
 /**
@@ -262,7 +263,7 @@ router.patch(
   authMiddleware,
   roleMiddleware('admin', 'seller'),
   validate(updateProductSchema),
-  productController.update.bind(productController)
+  productController.update
 );
 
 /**
@@ -323,7 +324,7 @@ router.delete(
   '/:id',
   authMiddleware,
   roleMiddleware('admin', 'seller'),
-  productController.delete.bind(productController)
+  productController.remove
 );
 
 /**
@@ -423,7 +424,7 @@ router.post(
   authMiddleware,
   roleMiddleware('admin', 'seller'),
   uploadMultiple,
-  productController.uploadImages.bind(productController)
+  productController.uploadImages
 );
 
 export default router;

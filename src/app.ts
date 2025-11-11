@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { config } from './config';
 import { errorMiddleware } from './middlewares/error.middleware';
+import { notFoundMiddleware } from './middlewares/not-found.middleware';
 import { swaggerSpec } from './config/swagger';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/user.routes';
@@ -15,6 +16,17 @@ import orderRoutes from './modules/orders/order.routes';
 import couponRoutes from './modules/coupons/coupon.routes';
 import offerRoutes from './modules/offers/offer.routes';
 import categoryRoutes from './modules/categories/category.routes';
+import stockRoutes from './modules/stock/stock.routes';
+import notificationRoutes from './modules/notifications/notification.routes';
+import pushNotificationRoutes from './modules/push-notifications/push-notification.routes';
+import ratingRoutes from './modules/ratings/rating.routes';
+import commentRoutes from './modules/comments/comment.routes';
+import favoriteRoutes from './modules/favorites/favorite.routes';
+import wishlistRoutes from './modules/wishlist/wishlist.routes';
+import scraperRoutes from './modules/scraper/scraper.routes';
+import searchRoutes from './modules/search/search.routes';
+import userBehaviorRoutes from './modules/user-behavior/user-behavior.routes';
+import recommendationRoutes from './modules/recommendations/recommendation.routes';
 
 export const createApp = (): Express => {
   const app = express();
@@ -104,6 +116,42 @@ export const createApp = (): Express => {
 
   // User routes
   app.use('/api/v1', userRoutes);
+
+  // Stock routes
+  app.use('/api/v1/stock', stockRoutes);
+
+  // Notification routes
+  app.use('/api/v1/notifications', notificationRoutes);
+
+  // Push notification routes
+  app.use('/api/v1/push-notifications', pushNotificationRoutes);
+
+  // Rating routes
+  app.use('/api/v1/ratings', ratingRoutes);
+
+  // Comment routes
+  app.use('/api/v1/comments', commentRoutes);
+
+  // Favorite routes
+  app.use('/api/v1/favorites', favoriteRoutes);
+
+  // Wishlist routes
+  app.use('/api/v1/wishlists', wishlistRoutes);
+
+  // Scraper routes
+  app.use('/api/v1/scraper', scraperRoutes);
+
+  // Search routes
+  app.use('/api/v1/search', searchRoutes);
+
+  // User behavior routes
+  app.use('/api/v1/user-behavior', userBehaviorRoutes);
+
+  // Recommendation routes
+  app.use('/api/v1/recommendations', recommendationRoutes);
+
+  // 404 handler for undefined routes (must be before error middleware)
+  app.use(notFoundMiddleware);
 
   // Error handling middleware (must be last)
   app.use(errorMiddleware);

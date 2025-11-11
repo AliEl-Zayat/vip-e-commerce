@@ -1,0 +1,27 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "Ecommerce Backend API",
+  "description": "Production-ready ecommerce backend built with Express.js, TypeScript, MongoDB, and Cloudinary. Follows Test-Driven Development (TDD) principles with comprehensive test coverage.",
+  "folders": ["src", "tests"],
+  "excludeFolders": ["node_modules", "dist", ".git", "coverage", ".next", "build"],
+  "excludeFiles": ["*.log", "*.test.ts", "*.spec.ts", "combined.log", "error.log"],
+  "rules": [
+    "Use Express.js with TypeScript for API development",
+    "Follow Test-Driven Development (TDD) principles",
+    "Ensure test coverage >= 90%",
+    "Use MongoDB with Mongoose for database operations",
+    "Use Cloudinary for image uploads and storage",
+    "Implement JWT-based authentication with refresh tokens",
+    "Use Zod for runtime validation",
+    "Follow RESTful API conventions",
+    "Use role-based access control (admin, seller, customer)",
+    "Implement proper error handling with unified error response format",
+    "Use pnpm as the package manager",
+    "Ensure compatibility with Node.js >= 18",
+    "Use TypeScript strict mode",
+    "Follow existing code style and structure",
+    "Use early returns for better code readability",
+    "Implement proper security measures: Helmet, CORS, rate limiting, secure cookies"
+  ],
+  "previousVersions": []
+}

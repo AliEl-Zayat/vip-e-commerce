@@ -1,82 +1,64 @@
-import { Request, Response, NextFunction } from 'express';
-import { userService } from './user.service';
+import { Request, Response } from 'express';
+import * as userService from './user.service';
 import { UpdateProfileDto } from './dto/user.dto';
 import { success } from '../../utils/response.util';
 import { uploadToCloudinary } from '../../utils/cloudinary.util';
 import { AppError } from '../../utils/error.util';
+import { asyncHandler } from '../../utils/async-handler.util';
 
-export class UserController {
-  async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      if (!req.user) {
-        throw new Error('User not authenticated');
-      }
+import { IUser } from './user.model';
 
-      const user = await userService.getProfile(req.user._id.toString());
+// Pure function: Transform user to response format
+const transformUser = (user: IUser) => ({
+  id: user._id.toString(),
+  email: user.email,
+  name: user.name,
+  role: user.role,
+  avatarUrl: user.avatarUrl,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+});
 
-      success(res, {
-        id: user._id.toString(),
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      });
-    } catch (err) {
-      next(err);
-    }
+// Controller handlers (functional programming approach)
+export const getProfile = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    throw new Error('User not authenticated');
   }
 
-  async updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      if (!req.user) {
-        throw new Error('User not authenticated');
-      }
+  const user = await userService.getProfile(req.user._id.toString());
+  success(res, transformUser(user));
+});
 
-      const data = req.body as UpdateProfileDto;
-      const user = await userService.updateProfile(req.user._id.toString(), data);
-
-      success(res, {
-        id: user._id.toString(),
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      });
-    } catch (err) {
-      next(err);
-    }
+export const updateProfile = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    throw new Error('User not authenticated');
   }
 
-  async uploadAvatar(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      if (!req.user) {
-        throw new Error('User not authenticated');
-      }
+  const data = req.body as UpdateProfileDto;
+  const user = await userService.updateProfile(req.user._id.toString(), data);
 
-      if (!req.file) {
-        throw AppError.badRequest('No file uploaded');
-      }
+  success(res, transformUser(user));
+});
 
-      // Upload to Cloudinary
-      const result = await uploadToCloudinary(req.file, `avatars/${req.user._id}`);
-
-      // Update user profile
-      const user = await userService.updateProfile(req.user._id.toString(), {
-        avatarUrl: result.url,
-      });
-
-      success(res, {
-        id: user._id.toString(),
-        avatarUrl: user.avatarUrl,
-      });
-    } catch (err) {
-      next(err);
-    }
+export const uploadAvatar = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  if (!req.user) {
+    throw new Error('User not authenticated');
   }
-}
 
-export const userController = new UserController();
+  if (!req.file) {
+    throw AppError.badRequest('No file uploaded');
+  }
+
+  // Upload to Cloudinary
+  const result = await uploadToCloudinary(req.file, `avatars/${req.user._id}`);
+
+  // Update user profile
+  const user = await userService.updateProfile(req.user._id.toString(), {
+    avatarUrl: result.url,
+  });
+
+  success(res, {
+    id: user._id.toString(),
+    avatarUrl: user.avatarUrl,
+  });
+});

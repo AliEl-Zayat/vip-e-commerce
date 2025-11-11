@@ -131,8 +131,8 @@ export class CategoryService {
     }
 
     // Build tree structure
-    const categoryMap = new Map<string, ICategory & { children?: ICategory[] }>();
-    const rootCategories: (ICategory & { children?: ICategory[] })[] = [];
+    const categoryMap = new Map<string, any & { children?: any[] }>();
+    const rootCategories: any[] = [];
 
     // First pass: create map of all categories
     allCategories.forEach((category) => {
@@ -242,7 +242,7 @@ export class CategoryService {
     await Category.findByIdAndDelete(id);
   }
 
-  async getCategoryWithChildren(id: string): Promise<ICategory & { children?: ICategory[] }> {
+  async getCategoryWithChildren(id: string): Promise<any> {
     const category = await Category.findById(id).populate('parentId', 'name slug');
     if (!category) {
       throw AppError.notFound('Category not found');
@@ -252,9 +252,10 @@ export class CategoryService {
       .populate('parentId', 'name slug')
       .sort({ order: 1, name: 1 });
 
-    return { ...category.toObject(), children };
+    return { ...category.toObject(), children: children.map(c => c.toObject()) };
   }
 }
 
 export const categoryService = new CategoryService();
+
 

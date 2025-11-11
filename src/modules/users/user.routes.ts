@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { userController } from './user.controller';
+import * as userController from './user.controller';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { validate } from '../../middlewares/validation.middleware';
 import { uploadSingle } from '../../middlewares/upload.middleware';
@@ -40,7 +40,7 @@ router.use(authMiddleware);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/profile', userController.getProfile.bind(userController));
+router.get('/profile', userController.getProfile);
 
 /**
  * @swagger
@@ -88,7 +88,7 @@ router.get('/profile', userController.getProfile.bind(userController));
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.patch('/profile', validate(updateProfileSchema), userController.updateProfile.bind(userController));
+router.patch('/profile', validate(updateProfileSchema), userController.updateProfile);
 
 /**
  * @swagger
@@ -153,7 +153,7 @@ router.patch('/profile', validate(updateProfileSchema), userController.updatePro
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/profile/avatar', uploadSingle, userController.uploadAvatar.bind(userController));
+router.post('/profile/avatar', uploadSingle, userController.uploadAvatar);
 
 export default router;
 

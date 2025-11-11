@@ -38,7 +38,7 @@ export const generateQRCodeBuffer = async (data: string): Promise<Buffer> => {
   try {
     return await QRCode.toBuffer(data, {
       errorCorrectionLevel: 'M',
-      type: 'image/png',
+      type: 'png',
       width: 300,
       margin: 1,
     });
@@ -46,4 +46,5 @@ export const generateQRCodeBuffer = async (data: string): Promise<Buffer> => {
     throw new Error('Failed to generate QR code');
   }
 };
+
 

@@ -38,3 +38,4 @@ export type CreateCouponDto = z.infer<typeof createCouponSchema>;
 export type UpdateCouponDto = z.infer<typeof updateCouponSchema>;
 export type ApplyCouponDto = z.infer<typeof applyCouponSchema>;
 
+

@@ -67,34 +67,43 @@ const offerSchema = new Schema<IOffer>(
   {
     title: {
       type: String,
-      required: true,
+      required: [true, 'Offer title is required'],
       trim: true,
+      maxlength: [200, 'Title cannot exceed 200 characters'],
     },
     description: {
       type: String,
+      maxlength: [1000, 'Description cannot exceed 1000 characters'],
     },
     offerType: {
       type: String,
-      enum: ['flash_sale', 'bogo', 'category_discount', 'product_discount', 'bundle', 'free_shipping'],
-      required: true,
+      enum: {
+        values: ['flash_sale', 'bogo', 'category_discount', 'product_discount', 'bundle', 'free_shipping'],
+        message: 'Offer type must be one of: flash_sale, bogo, category_discount, product_discount, bundle, free_shipping',
+      },
+      required: [true, 'Offer type is required'],
+      // Index defined at schema level: offerSchema.index({ offerType: 1, isActive: 1 })
     },
     discountType: {
       type: String,
-      enum: ['percentage', 'fixed'],
-      required: true,
+      enum: {
+        values: ['percentage', 'fixed'],
+        message: 'Discount type must be percentage or fixed',
+      },
+      required: [true, 'Discount type is required'],
     },
     discountValue: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, 'Discount value is required'],
+      min: [0, 'Discount value must be non-negative'],
     },
     minPurchaseAmount: {
       type: Number,
-      min: 0,
+      min: [0, 'Minimum purchase amount must be non-negative'],
     },
     maxDiscountAmount: {
       type: Number,
-      min: 0,
+      min: [0, 'Maximum discount amount must be non-negative'],
     },
     flashSaleStart: {
       type: Date,
@@ -104,15 +113,15 @@ const offerSchema = new Schema<IOffer>(
     },
     flashSaleStockLimit: {
       type: Number,
-      min: 0,
+      min: [0, 'Flash sale stock limit must be non-negative'],
     },
     bogoBuyQuantity: {
       type: Number,
-      min: 1,
+      min: [1, 'BOGO buy quantity must be at least 1'],
     },
     bogoGetQuantity: {
       type: Number,
-      min: 1,
+      min: [1, 'BOGO get quantity must be at least 1'],
     },
     bogoProductId: {
       type: Schema.Types.ObjectId,
@@ -121,6 +130,7 @@ const offerSchema = new Schema<IOffer>(
     applicableCategories: [
       {
         type: String,
+        trim: true,
       },
     ],
     applicableProducts: [
@@ -129,27 +139,31 @@ const offerSchema = new Schema<IOffer>(
         ref: 'Product',
       },
     ],
-    bundleProducts: [bundleProductSchema],
+    bundleProducts: {
+      type: [bundleProductSchema],
+      default: [],
+    },
     bundlePrice: {
       type: Number,
-      min: 0,
+      min: [0, 'Bundle price must be non-negative'],
     },
     freeShippingMinAmount: {
       type: Number,
-      min: 0,
+      min: [0, 'Free shipping minimum amount must be non-negative'],
     },
     validFrom: {
       type: Date,
-      required: true,
+      required: [true, 'Valid from date is required'],
       default: Date.now,
     },
     validUntil: {
       type: Date,
-      required: true,
+      required: [true, 'Valid until date is required'],
     },
     isActive: {
       type: Boolean,
       default: true,
+      // Index defined at schema level: offerSchema.index({ isActive: 1, validFrom: 1, validUntil: 1 })
     },
     priority: {
       type: Number,
@@ -158,19 +172,37 @@ const offerSchema = new Schema<IOffer>(
     usageCount: {
       type: Number,
       default: 0,
+      min: [0, 'Usage count must be non-negative'],
     },
   },
   {
     timestamps: true,
+    strict: true,
+    toJSON: {
+      transform: (_doc, ret: any) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: {
+      transform: (_doc, ret: any) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 
-offerSchema.index({ offerType: 1 });
-offerSchema.index({ isActive: 1 });
-offerSchema.index({ validFrom: 1, validUntil: 1 });
-offerSchema.index({ priority: -1 });
-offerSchema.index({ applicableProducts: 1 });
-offerSchema.index({ applicableCategories: 1 });
+// Compound indexes for better query performance
+offerSchema.index({ offerType: 1, isActive: 1 });
+offerSchema.index({ isActive: 1, validFrom: 1, validUntil: 1 });
+offerSchema.index({ priority: -1, isActive: 1 });
+offerSchema.index({ applicableProducts: 1, isActive: 1 });
+offerSchema.index({ applicableCategories: 1, isActive: 1 });
 
 // Validate offer based on type
 offerSchema.pre('save', function (next) {
@@ -229,4 +261,5 @@ offerSchema.pre('save', function (next) {
 });
 
 export const Offer = mongoose.model<IOffer>('Offer', offerSchema);
+
 

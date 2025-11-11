@@ -181,7 +181,7 @@ export class CategoryController {
         image: category.image,
         isActive: category.isActive,
         order: category.order,
-        children: category.children?.map((child) => ({
+        children: category.children?.map((child: any) => ({
           id: child._id.toString(),
           name: child.name,
           slug: child.slug,
@@ -232,4 +232,5 @@ export class CategoryController {
 }
 
 export const categoryController = new CategoryController();
+
 

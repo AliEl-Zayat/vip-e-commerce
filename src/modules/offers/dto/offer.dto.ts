@@ -135,3 +135,4 @@ export type CreateOfferDto = z.infer<typeof createOfferSchema>;
 export type UpdateOfferDto = z.infer<typeof updateOfferSchema>;
 export type ApplyOfferDto = z.infer<typeof applyOfferSchema>;
 
+

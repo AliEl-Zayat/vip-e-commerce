@@ -2,6 +2,7 @@ import { Order, IOrder, OrderStatus } from './order.model';
 import { Cart } from '../cart/cart.model';
 import { Product } from '../products/product.model';
 import { couponService } from '../coupons/coupon.service';
+import { userBehaviorService } from '../user-behavior/user-behavior.service';
 import { CreateOrderDto, UpdateOrderStatusDto, UpdateShippingInfoDto } from './dto/order.dto';
 import { AppError } from '../../utils/error.util';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
@@ -97,6 +98,23 @@ export class OrderService {
     cart.couponCode = undefined;
     cart.discountAmount = 0;
     await cart.save();
+
+    // Track purchase events for each product (async, don't block)
+    orderItems.forEach((item) => {
+      userBehaviorService
+        .track(userId, {
+          eventType: 'purchase',
+          productId: item.productId.toString(),
+          eventData: {
+            quantity: item.quantity,
+            price: item.price,
+            orderId: order._id.toString(),
+          },
+        })
+        .catch((err) => {
+          console.error('[OrderService] Error tracking purchase:', err);
+        });
+    });
 
     return order.populate('items.productId');
   }

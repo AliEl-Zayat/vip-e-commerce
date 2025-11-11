@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { Offer, IOffer } from './offer.model';
-import { CreateOfferDto, UpdateOfferDto, ApplyOfferDto } from './dto/offer.dto';
+import { CreateOfferDto, UpdateOfferDto } from './dto/offer.dto';
 import { AppError } from '../../utils/error.util';
 import { parsePagination, buildPaginationMeta } from '../../utils/pagination.util';
 import { Product } from '../products/product.model';
@@ -353,9 +353,6 @@ export class OfferService {
 
         case 'bundle':
           if (offer.bundleProducts && offer.bundleProducts.length > 0) {
-            const bundleProductIds = offer.bundleProducts.map((bp: any) =>
-              bp.productId._id?.toString() || bp.productId.toString()
-            );
             const bundleQuantities = new Map(
               offer.bundleProducts.map((bp: any) => [
                 bp.productId._id?.toString() || bp.productId.toString(),
@@ -435,4 +432,5 @@ export class OfferService {
 }
 
 export const offerService = new OfferService();
+
 

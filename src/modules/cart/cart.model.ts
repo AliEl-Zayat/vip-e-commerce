@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { MongooseTransformReturn, MongooseTransformFn } from '../../types/mongoose.types';
 
 export interface ICartItem {
   productId: mongoose.Types.ObjectId;
@@ -42,26 +43,51 @@ const cartSchema = new Schema<ICart>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      unique: true,
+      required: [true, 'User ID is required'],
     },
-    items: [cartItemSchema],
+    items: {
+      type: [cartItemSchema],
+      default: [],
+      validate: {
+        validator: (items: ICartItem[]) => items.length >= 0,
+        message: 'Cart items must be an array',
+      },
+    },
     couponCode: {
       type: String,
       uppercase: true,
+      trim: true,
     },
     discountAmount: {
       type: Number,
-      min: 0,
+      min: [0, 'Discount amount must be non-negative'],
       default: 0,
     },
   },
   {
     timestamps: true,
+    strict: true,
+    toJSON: {
+      transform: ((_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      }) as MongooseTransformFn,
+    },
+    toObject: {
+      transform: ((_doc, ret: MongooseTransformReturn) => {
+        ret.id = ret._id?.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      }) as MongooseTransformFn,
+    },
   }
 );
 
-cartSchema.index({ userId: 1 });
+cartSchema.index({ userId: 1 }, { unique: true });
+cartSchema.index({ 'items.productId': 1 });
 
 export const Cart = mongoose.model<ICart>('Cart', cartSchema);
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authController } from './auth.controller';
+import * as authController from './auth.controller';
 import { validate } from '../../middlewares/validation.middleware';
 import {
   registerSchema,
@@ -51,7 +51,7 @@ const router: Router = Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/register', validate(registerSchema), authController.register.bind(authController));
+router.post('/register', validate(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -82,7 +82,7 @@ router.post('/register', validate(registerSchema), authController.register.bind(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/login', validate(loginSchema), authController.login.bind(authController));
+router.post('/login', validate(loginSchema), authController.login);
 
 /**
  * @swagger
@@ -118,7 +118,7 @@ router.post('/login', validate(loginSchema), authController.login.bind(authContr
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/refresh', authController.refresh.bind(authController));
+router.post('/refresh', authController.refresh);
 
 /**
  * @swagger
@@ -148,7 +148,7 @@ router.post('/refresh', authController.refresh.bind(authController));
  *                       type: string
  *                       example: Logged out successfully
  */
-router.post('/logout', authController.logout.bind(authController));
+router.post('/logout', authController.logout);
 
 /**
  * @swagger
@@ -176,7 +176,7 @@ router.post('/logout', authController.logout.bind(authController));
 router.post(
   '/forget-password',
   validate(forgetPasswordSchema),
-  authController.forgetPassword.bind(authController)
+  authController.forgetPassword
 );
 
 /**
@@ -211,7 +211,7 @@ router.post(
 router.post(
   '/reset-password',
   validate(resetPasswordSchema),
-  authController.resetPassword.bind(authController)
+  authController.resetPassword
 );
 
 /**
@@ -240,7 +240,7 @@ router.post(
 router.post(
   '/otp/request',
   validate(requestOTPSchema),
-  authController.requestOTP.bind(authController)
+  authController.requestOTP
 );
 
 /**
@@ -280,7 +280,7 @@ router.post(
 router.post(
   '/otp/verify',
   validate(verifyOTPSchema),
-  authController.verifyOTP.bind(authController)
+  authController.verifyOTP
 );
 
 /**
@@ -312,7 +312,7 @@ router.post(
  *                       type: number
  *                       description: Expiration time in seconds
  */
-router.post('/qr/generate', authController.generateQR.bind(authController));
+router.post('/qr/generate', authController.generateQR);
 
 /**
  * @swagger
@@ -350,7 +350,7 @@ router.post('/qr/generate', authController.generateQR.bind(authController));
  *                     refreshToken:
  *                       type: string
  */
-router.get('/qr/status/:sessionId', authController.getQRStatus.bind(authController));
+router.get('/qr/status/:sessionId', authController.getQRStatus);
 
 /**
  * @swagger
@@ -377,7 +377,7 @@ router.get('/qr/status/:sessionId', authController.getQRStatus.bind(authControll
  *       200:
  *         description: QR code scanned successfully
  */
-router.post('/qr/scan', authController.scanQR.bind(authController));
+router.post('/qr/scan', authController.scanQR);
 
 /**
  * @swagger
@@ -411,7 +411,7 @@ router.post(
   '/qr/authenticate',
   authMiddleware,
   validate(authenticateQRSchema),
-  authController.authenticateQR.bind(authController)
+  authController.authenticateQR
 );
 
 export default router;

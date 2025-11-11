@@ -137,51 +137,61 @@ const orderSchema = new Schema<IOrder>(
   {
     orderNumber: {
       type: String,
-      required: true,
-      unique: true,
+      required: [true, 'Order number is required'],
     },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: [true, 'User ID is required'],
+      // Index defined at schema level: orderSchema.index({ userId: 1, createdAt: -1 })
     },
-    items: [orderItemSchema],
+    items: {
+      type: [orderItemSchema],
+      required: [true, 'Order items are required'],
+      validate: {
+        validator: (items: IOrderItem[]) => items.length > 0,
+        message: 'Order must have at least one item',
+      },
+    },
     subtotal: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, 'Subtotal is required'],
+      min: [0, 'Subtotal must be non-negative'],
     },
     shippingCost: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, 'Shipping cost is required'],
+      min: [0, 'Shipping cost must be non-negative'],
       default: 0,
     },
     tax: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, 'Tax is required'],
+      min: [0, 'Tax must be non-negative'],
       default: 0,
     },
     total: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, 'Total is required'],
+      min: [0, 'Total must be non-negative'],
     },
     currency: {
       type: String,
-      required: true,
+      required: [true, 'Currency is required'],
       default: 'USD',
+      uppercase: true,
+      length: [3, 'Currency must be 3 characters'],
     },
     discountAmount: {
       type: Number,
-      required: true,
-      min: 0,
+      required: [true, 'Discount amount is required'],
+      min: [0, 'Discount amount must be non-negative'],
       default: 0,
     },
     couponCode: {
       type: String,
       uppercase: true,
+      trim: true,
     },
     couponId: {
       type: Schema.Types.ObjectId,
@@ -189,45 +199,85 @@ const orderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+      enum: {
+        values: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+        message: 'Status must be one of: pending, confirmed, processing, shipped, delivered, cancelled, refunded',
+      },
       default: 'pending',
+      // Index defined at schema level: orderSchema.index({ status: 1, createdAt: -1 })
     },
     shippingAddress: {
       type: shippingAddressSchema,
-      required: true,
+      required: [true, 'Shipping address is required'],
     },
     shippingInfo: {
       type: shippingInfoSchema,
     },
     paymentMethod: {
       type: String,
-      required: true,
+      required: [true, 'Payment method is required'],
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded'],
+      enum: {
+        values: ['pending', 'paid', 'failed', 'refunded'],
+        message: 'Payment status must be one of: pending, paid, failed, refunded',
+      },
       default: 'pending',
     },
     notes: {
       type: String,
+      maxlength: [1000, 'Notes cannot exceed 1000 characters'],
     },
   },
   {
     timestamps: true,
+    strict: true,
+    toJSON: {
+      transform: (_doc, ret: any) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: {
+      transform: (_doc, ret: any) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 
-orderSchema.index({ userId: 1 });
-orderSchema.index({ orderNumber: 1 });
-orderSchema.index({ status: 1 });
-orderSchema.index({ createdAt: -1 });
+// Compound indexes for better query performance
+orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ orderNumber: 1 }, { unique: true });
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ userId: 1, status: 1 });
+orderSchema.index({ 'items.productId': 1 });
 
 // Generate order number before saving
 orderSchema.pre('save', async function (next) {
   if (this.isNew && !this.orderNumber) {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    this.orderNumber = `ORD-${timestamp}-${random}`;
+    let orderNumber: string;
+    let isUnique = false;
+    
+    // Ensure uniqueness
+    while (!isUnique) {
+      const timestamp = Date.now().toString(36).toUpperCase();
+      const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+      orderNumber = `ORD-${timestamp}-${random}`;
+      
+      const existingOrder = await mongoose.model('Order').findOne({ orderNumber });
+      if (!existingOrder) {
+        isUnique = true;
+      }
+    }
+    
+    this.orderNumber = orderNumber!;
   }
   next();
 });

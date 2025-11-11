@@ -13,7 +13,6 @@ describe('Offer Module', () => {
   let adminToken: string;
   let customerToken: string;
   let productId: string;
-  let productId2: string;
   let productId3: string;
 
   beforeAll(async () => {
@@ -56,19 +55,6 @@ describe('Offer Module', () => {
       sellerId: seller._id,
     });
     productId = product._id.toString();
-
-    const product2 = await Product.create({
-      title: 'Test Product 2',
-      slug: 'test-product-2',
-      description: 'Test Description 2',
-      price: 5000, // $50
-      currency: 'USD',
-      stock: 10,
-      category: 'Clothing',
-      tags: ['test'],
-      sellerId: seller._id,
-    });
-    productId2 = product2._id.toString();
 
     const product3 = await Product.create({
       title: 'Test Product 3',
@@ -569,4 +555,5 @@ describe('Offer Module', () => {
     });
   });
 });
+
 

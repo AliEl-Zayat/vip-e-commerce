@@ -3,6 +3,7 @@ import { Product } from '../products/product.model';
 import { AddToCartDto, UpdateCartItemDto } from './dto/cart.dto';
 import { couponService } from '../coupons/coupon.service';
 import { offerService } from '../offers/offer.service';
+import { userBehaviorService } from '../user-behavior/user-behavior.service';
 import { AppError } from '../../utils/error.util';
 
 export class CartService {
@@ -94,6 +95,23 @@ export class CartService {
     }
 
     await cart.save();
+
+    // Track add to cart event (async, don't block)
+    userBehaviorService
+      .track(userId, {
+        eventType: 'add_to_cart',
+        productId: data.productId,
+        eventData: {
+          quantity: existingItemIndex >= 0 ? cart.items[existingItemIndex].quantity : data.quantity,
+          price: product.price,
+          category: product.category,
+          tags: product.tags,
+        },
+      })
+      .catch((err) => {
+        console.error('[CartService] Error tracking add to cart:', err);
+      });
+
     return cart.populate('items.productId');
   }
 
@@ -144,6 +162,17 @@ export class CartService {
     }
 
     await cart.save();
+
+    // Track remove from cart event (async, don't block)
+    userBehaviorService
+      .track(userId, {
+        eventType: 'remove_from_cart',
+        productId,
+      })
+      .catch((err) => {
+        console.error('[CartService] Error tracking remove from cart:', err);
+      });
+
     return cart.populate('items.productId');
   }
 

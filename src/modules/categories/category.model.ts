@@ -18,25 +18,26 @@ const categorySchema = new Schema<ICategory>(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, 'Category name is required'],
       trim: true,
-      unique: true,
+      maxlength: [100, 'Category name cannot exceed 100 characters'],
     },
     slug: {
       type: String,
-      required: true,
-      unique: true,
+      required: [true, 'Category slug is required'],
       lowercase: true,
       trim: true,
     },
     description: {
       type: String,
       trim: true,
+      maxlength: [1000, 'Description cannot exceed 1000 characters'],
     },
     parentId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
       default: null,
+      // Index defined at schema level: categorySchema.index({ parentId: 1, isActive: 1 })
     },
     image: {
       type: String,
@@ -44,22 +45,43 @@ const categorySchema = new Schema<ICategory>(
     isActive: {
       type: Boolean,
       default: true,
+      // Index defined at schema level: categorySchema.index({ isActive: 1, order: 1 })
     },
     order: {
       type: Number,
       default: 0,
+      min: [0, 'Order must be non-negative'],
     },
   },
   {
     timestamps: true,
+    strict: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret: any) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (_doc, ret: any) => {
+        ret.id = ret._id.toString();
+        delete ret._id;
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 
-// Indexes
-categorySchema.index({ slug: 1 });
-categorySchema.index({ parentId: 1 });
-categorySchema.index({ isActive: 1 });
-categorySchema.index({ order: 1 });
+// Compound indexes for better query performance
+categorySchema.index({ slug: 1 }, { unique: true });
+categorySchema.index({ parentId: 1, isActive: 1 });
+categorySchema.index({ isActive: 1, order: 1 });
+categorySchema.index({ name: 1 }, { unique: true });
 
 // Generate slug from name before saving
 categorySchema.pre('save', function (next) {
@@ -95,7 +117,11 @@ categorySchema.pre('save', async function (next) {
       if (!parent) {
         break;
       }
-      currentParentId = (parent as ICategory).parentId;
+      const parentCategory = parent as ICategory;
+      if (!parentCategory.parentId) {
+        break;
+      }
+      currentParentId = parentCategory.parentId;
     }
   }
   next();
@@ -109,9 +135,8 @@ categorySchema.virtual('productCount', {
   count: true,
 });
 
-// Ensure virtuals are included in JSON
-categorySchema.set('toJSON', { virtuals: true });
-categorySchema.set('toObject', { virtuals: true });
+// Virtuals are already configured in schema options above
 
 export const Category = mongoose.model<ICategory>('Category', categorySchema);
+
 
